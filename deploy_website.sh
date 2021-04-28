@@ -22,18 +22,17 @@ else
 
   [ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!"
 
-  mysql -u root "" -e "CREATE DATABASE $username CHARACTER SET UTF8 COLLATE UTF8_BIN;"
-  mysql -u root "" -e "CREATE USER '$username'@'%' IDENTIFIED BY '$password';"
-  mysql -u root "" -e "GRANT ALL PRIVILEGES ON $username.* TO '$username'@'%';"
-  mysql -u root "" -e "FLUSH PRIVILEGES;"
+  #mysql -u root "" -e "CREATE DATABASE $username CHARACTER SET UTF8 COLLATE UTF8_BIN;"
+  #mysql -u root "" -e "CREATE USER '$username'@'%' IDENTIFIED BY '$password';"
+  #mysql -u root "" -e "GRANT ALL PRIVILEGES ON $username.* TO '$username'@'%';"
+  #mysql -u root "" -e "FLUSH PRIVILEGES;"
 
+ #generate dir for site
   mkdir "/var/www/$username"
-
   cd "/var/www/$username" || return
 
   # wget to download VERSION file
   $wget "${WORDPRESS}"
-
   $tar xvf "latest-fr_FR.tar.gz"
 
   sudo mv "/var/www/$username/wordpress/"* "/var/www/$username"
@@ -53,4 +52,19 @@ else
 
   echo "Done, please browse to http://$projectname to check!"
 
+  #cd "/var/www/$username/"
+  # arg 1 username ou projectname, arg2 dir vers le site
+  bash wp2.sh "$projectname" "/var/www/$username/" 
+
 fi
+
+
+
+
+
+
+
+
+
+
+

@@ -13,7 +13,9 @@ DB_COLLATE="utf8_default_ci"
 
 TEMP_FILE="/tmp/out.tmp.$$"
 
-WPDIR="."
+WPDIR="." # mettre le nom du rep vers wordpress (contenant wp-config-sample.php)
+WPDIR=$2 
+
 WP_DEBUG=true
 
 
