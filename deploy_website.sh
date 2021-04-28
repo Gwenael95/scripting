@@ -40,7 +40,34 @@ else
 
   sudo rm -r "wordpress"
 
+  sudo cp /var/www/$username/wp-config-sample.php /var/www/$username/wp-config.php
+
   sudo chmod -R 755 "/var/www/$username"
+
+  #Prepare la config de wordpress
+  DB_NAME=$username
+  DB_USER=$username
+  DB_PASSWORD=$password
+  DB_HOST="localhost"
+
+  TEMP_FILE="/tmp/out.tmp.$$"
+
+  # try generate random password
+  DB_PASSWORD=< /dev/urandom tr -dc A-Za-z0-9 | head -c14;
+
+  # generate wp-config.php by copying wp-config-sample.php
+  sudo cp /var/www/$username/wp-config-sample.php /var/www/$username/wp-config.php
+  DB_DEFINES=('DB_NAME' 'DB_USER' 'DB_PASSWORD' 'DB_HOST' 'WPLANG')
+
+  #loop for update all the config file DB data
+  for DB_PROPERTY in ${DB_DEFINES[@]} ;
+  do
+      OLD="define(.*'$DB_PROPERTY', '.*'.*);"
+      NEW="define('$DB_PROPERTY', '${!DB_PROPERTY}');"  # Will probably need some pretty crazy escaping to allow for better passwords
+
+      sed "/$DB_PROPERTY/s/.*/$NEW/" /var/www/$username/wp-config.php > $TEMP_FILE && mv $TEMP_FILE /var/www/$username/wp-config.php
+  done
+  #Fin de la config wordpress
 
   sudo cp /etc/apache2/sites-available/template /etc/apache2/sites-available/"$projectname.conf"
 
