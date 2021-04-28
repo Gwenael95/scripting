@@ -5,56 +5,50 @@ tar=/bin/tar
 
 WORDPRESS="https://fr.wordpress.org/latest-fr_FR.tar.gz"
 
-if($1); then
+read -p "Enter a project name : " projectname
+read -s -p "Enter password : " password
+egrep "^$projectname" /etc/passwd >/dev/null
+echo $?
+exist=$?
 
-  projectname=$1
+if [ $exist ]; then
+  echo "projectname exists!"
+  exit 1
+else
+  arrIN=(${projectname//./ })
 
-  read -p "Enter a project name : " projectname
-  read -s -p "Enter password : " password
-  egrep "^$projectname" /etc/passwd >/dev/null
-  echo $?
-  exist=$?
+  username="${arrIN[1]}"
+  sudo useradd -m -G "www-data" -p "$password" "$username"
 
-  if [ $exist ]; then
-		echo "projectname exists!"
-		exit 1
-	else
-    arrIN=(${projectname//./ })
+  [ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!"
 
-    username="${arrIN[1]}"
-		sudo useradd -m -G "www-data" -p "$password" "$username"
+  mysql -u root -p -e "CREATE DATABASE $username CHARACTER SET UTF8 COLLATE UTF8_BIN;"
+  mysql -u root -p -e "CREATE USER '$username'@'%' IDENTIFIED BY '$password';"
+  mysql -u root -p -e "GRANT ALL PRIVILEGES ON $username.* TO '$username'@'%';"
+  mysql -u root -p -e "FLUSH PRIVILEGES;"
 
-		[ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!"
+  sudo mkdir "var/www/$username"
 
-		mysql -u root -p -e "CREATE DATABASE $username CHARACTER SET UTF8 COLLATE UTF8_BIN;"
-    mysql -u root -p -e "CREATE USER '$username'@'%' IDENTIFIED BY '$password';"
-    mysql -u root -p -e "GRANT ALL PRIVILEGES ON $username.* TO '$username'@'%';"
-    mysql -u root -p -e "FLUSH PRIVILEGES;"
+  sudo cd "var/www/$username" || return
 
-		sudo mkdir "var/www/$username"
+  # wget to download VERSION file
+  $wget "${WORDPRESS}"
 
-		sudo cd "var/www/$username" || return
+  $tar xvf "latest-fr_FR.tar.gz"
 
-		# wget to download VERSION file
-    $wget "${WORDPRESS}"
+  sudo mv -r "wordpress/*" "var/www/$username/"
 
-    $tar xvf "latest-fr_FR.tar.gz"
+  sudo rm -r "wordpress"
 
-    sudo mv -r "wordpress/*" "var/www/$username/"
+  sudo cp /etc/apache2/sites-available/template /etc/apache2/sites-available/$projectname
 
-    sudo rm -r "wordpress"
+  sudo sed -i 's/template/'$username'/g' /etc/apache2/sites-available/$projectname
 
-    sudo cp /etc/apache2/sites-available/template /etc/apache2/sites-available/$projectname
+  sudo sed -i '1s/^/192.168.1.61       '$projectname'\n/' /etc/hosts
 
-    sudo sed -i 's/template/'$username'/g' /etc/apache2/sites-available/$projectname
+  sudo a2ensite $projectname
+  sudo service apache2 reload
 
-    sudo sed -i '1s/^/192.168.1.61       '$projectname'\n/' /etc/hosts
-
-    sudo a2ensite $projectname
-    sudo service apache2 reload
-
-    echo "Done, please browse to http://$projectname to check!"
-
-	fi
+  echo "Done, please browse to http://$projectname to check!"
 
 fi
