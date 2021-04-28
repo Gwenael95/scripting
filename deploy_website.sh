@@ -28,27 +28,19 @@ else
   mysql -u root "" -e "FLUSH PRIVILEGES;"
 
   mkdir "/var/www/$username"
-  read -p "Mkdir : "
-  echo "J'ai mkdir"
 
   cd "/var/www/$username" || return
-  read -p "cd var/www : "
-  echo "J'ai CD"
 
   # wget to download VERSION file
   $wget "${WORDPRESS}"
-
-  read -p "je vais dezipper : "
 
   $tar xvf "latest-fr_FR.tar.gz"
 
   sudo mv "/var/www/$username/wordpress/"* "/var/www/$username"
 
-  read -p "mv wordpress : "
-
   sudo rm -r "wordpress"
 
-  read -p "je remove unused dir : "
+  sudo chmod -R 755 "/var/www/$username"
 
   sudo cp /etc/apache2/sites-available/template /etc/apache2/sites-available/"$projectname.conf"
 
