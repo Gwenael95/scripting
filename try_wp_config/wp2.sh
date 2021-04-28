@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# args : 1 = username (used for DB username, dbname)
 
 USERNAME=$1 # username
 
@@ -20,18 +21,14 @@ cp $WPDIR/wp-config-sample.php $WPDIR/wp-config.php
 DB_DEFINES=('DB_NAME' 'DB_USER' 'DB_PASSWORD' 'DB_HOST' 'WPLANG' 'DB_COLLATE')
 
 
-# @todo , ici on a un pb, le sed ne semble pas modifier le fichier wp-config.php
 #loop for update all the config file DB data
 for DB_PROPERTY in ${DB_DEFINES[@]} ;
 do
     OLD="define(.*'$DB_PROPERTY', '.*'.*);"
     NEW="define('$DB_PROPERTY', '${!DB_PROPERTY}')"  # Will probably need some pretty crazy escaping to allow for better passwords
     echo "$OLD --- $NEW" 
-    sed "s/$OLD/$NEW/g" $WPDIR/wp-config.php > $TEMP_FILE && mv $TEMP_FILE $WPDIR/wp-config.php
-
-    #try
-    #sed -i '' "s/$OLD_START.*OLD_END/$NEW/g" $WPDIR/wp-config.php > $TEMP_FILE && mv $TEMP_FILE $WPDIR/wp-config.php
-    #sed -i "s/$OLD_START.*$OLD_END/$NEW/g" $WPDIR/wp-config.php > $TEMP_FILE && mv $TEMP_FILE $WPDIR/wp-config.php
+    
+    sed "/$DB_PROPERTY/s/.*/$NEW/" $WPDIR/wp-config.php > $TEMP_FILE && mv $TEMP_FILE $WPDIR/wp-config.php
 
 done
 
