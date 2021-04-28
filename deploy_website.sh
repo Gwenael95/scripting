@@ -50,13 +50,13 @@ else
 
   read -p "je remove unused dir : "
 
-  sudo cp /etc/apache2/sites-available/template /etc/apache2/sites-available/$projectname
+  sudo cp /etc/apache2/sites-available/template /etc/apache2/sites-available/"$projectname.conf"
 
-  sudo sed -i 's/template/'$username'/g' /etc/apache2/sites-available/$projectname".conf"
+  sudo sed -i 's/template/'$username'/g' /etc/apache2/sites-available/"$projectname.conf"
 
   sudo sed -i '1s/^/192.168.1.61  '$projectname'\n/' /etc/hosts
 
-  sudo a2ensite $projectname".conf"
+  sudo a2ensite "$projectname.conf"
   sudo service apache2 reload
 
   echo "Done, please browse to http://$projectname to check!"
