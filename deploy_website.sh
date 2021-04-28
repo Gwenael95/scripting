@@ -79,7 +79,9 @@ EOFMYSQL
 
   sudo sed -i 's/template/'$username'/g' /etc/apache2/sites-available/"$projectname.conf"
 
-  sudo sed -i '1s/^/192.168.1.61  '$projectname'\n/' /etc/hosts
+  ipMachine=$(hostname -I)
+
+  sudo sed -i '1s/^/'$ipMachine'  '$projectname'\n/' /etc/hosts
 
   sudo a2ensite "$projectname.conf"
   sudo service apache2 reload
