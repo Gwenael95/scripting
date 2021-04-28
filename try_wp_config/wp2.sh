@@ -16,6 +16,11 @@ TEMP_FILE="/tmp/out.tmp.$$"
 WPDIR="."
 WP_DEBUG=true
 
+
+# try generate random password
+DB_PASSWORD=< /dev/urandom tr -dc A-Za-z0-9 | head -c14;
+
+
 # generate wp-config.php by copying wp-config-sample.php
 cp $WPDIR/wp-config-sample.php $WPDIR/wp-config.php
 DB_DEFINES=('DB_NAME' 'DB_USER' 'DB_PASSWORD' 'DB_HOST' 'WPLANG' 'DB_COLLATE')
@@ -25,11 +30,9 @@ DB_DEFINES=('DB_NAME' 'DB_USER' 'DB_PASSWORD' 'DB_HOST' 'WPLANG' 'DB_COLLATE')
 for DB_PROPERTY in ${DB_DEFINES[@]} ;
 do
     OLD="define(.*'$DB_PROPERTY', '.*'.*);"
-    NEW="define('$DB_PROPERTY', '${!DB_PROPERTY}')"  # Will probably need some pretty crazy escaping to allow for better passwords
-    echo "$OLD --- $NEW" 
+    NEW="define('$DB_PROPERTY', '${!DB_PROPERTY}');"  # Will probably need some pretty crazy escaping to allow for better passwords
     
     sed "/$DB_PROPERTY/s/.*/$NEW/" $WPDIR/wp-config.php > $TEMP_FILE && mv $TEMP_FILE $WPDIR/wp-config.php
-
 done
 
 
