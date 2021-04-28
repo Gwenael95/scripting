@@ -22,10 +22,16 @@ else
 
   [ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!"
 
-  mysql -u root "" -e "CREATE DATABASE $username CHARACTER SET UTF8 COLLATE UTF8_BIN;"
-  mysql -u root "" -e "CREATE USER '$username'@'%' IDENTIFIED BY '$password';"
-  mysql -u root "" -e "GRANT ALL PRIVILEGES ON $username.* TO '$username'@'%';"
-  mysql -u root "" -e "FLUSH PRIVILEGES;"
+  #create database, user, with all privileges on his table
+  REQUEST="
+  CREATE DATABASE $username CHARACTER SET UTF8 COLLATE UTF8_BIN;
+  CREATE USER '$username'@'%' IDENTIFIED BY '$password';
+  GRANT ALL PRIVILEGES ON $username.* TO '$username'@'%';
+  FLUSH PRIVILEGES;
+  "
+  mysql --user=root <<EOFMYSQL
+  $REQUEST
+EOFMYSQL
 
   mkdir "/var/www/$username"
 
