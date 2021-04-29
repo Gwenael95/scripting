@@ -5,9 +5,33 @@ Nous apprendrons à utiliser des scripts .sh, déployer un serveur backup et un 
 web permettant l'hébergement de sites internet et leurs administrations.
 
 ## Sommaire
-1. [Service d'hébergement de sites clients](#Service-d'hebergement-de-sites-clients)
-    - [Script d'installation](#Script-d'installation)
+I. [Service d'hébergement de sites clients](#service-dhebergement-de-sites-clients)
+1. [Configuration de la VM](#configuration-de-la-vm)
+2. [Script d'installation](#script-dinstallation)
+    
+3. [Préparation du serveur Web manuel](#preparation-du-serveur-web-manuel)
+    - [SSH](#ssh)
+    - [Apache](#apache)
+    - [DNS](#dns)
+    - [VirtualHost](#virtualhost)
+        - [Template Virtual host](#template-virtual-host)
+    - [Wordpress](#wordpress)
+        - [Mysql](#mysql)
+        - [Completion d'Apache](#completion-dapache)
+        - [Fichiers wordpress](#fichiers-wordpress)
+    - [Cron](#cron)
+    - [Backup](#backup)
 
+4. [Preparation du serveur backup manuel](#preparation-du-serveur-backup-manuel)
+    - [Gestion des disques](#gestion-des-disques)
+        - [Partitionnement](#partitionnement)
+    - [Creation d'un LVM](#creation-dun-lvm)
+        - [Creation des volumes](#creation-des-volumes)
+        - [Montages des volumes](#montages-des-volumes)
+        - [Extension du volume](#extension-du-volume)
+    - [SSH backup](#ssh-backup)
+    - [Reception des backups](#reception-des-backups)
+    
 # Service d'hebergement de sites clients
 
 ## Configuration de la VM
@@ -43,9 +67,7 @@ Ce script permettra de bloquer les ip ayant échoué 5 fois à la connexion
 sur wordpress en utilisant iptables.
 
 
-
-
-## Préparation du serveur Web manuel
+## Preparation du serveur Web manuel
 
 ### SSH
 Sur votre serveur web, utiliser la commande ```sudo apt install net-tools```, 
@@ -230,8 +252,6 @@ des bases de données mysql du serveur web, ainsi que des données wordpress
 d'un serveur web ; afin de pouvoir restaurer
 l'ensemble des données en cas de problème important sur le serveur web.
 
-@todo expliquez toute la mise en place du serveur backup
-
 ### Gestion des disques
 Afin de pouvoir ajouter des disques et ainsi augmenter l'espace de stockage
 disponible sur un serveur sans perturber son fonctionnement, on prépare une LVM
@@ -254,7 +274,7 @@ les modifications en entrant ```w```. Vous avez ainsi partitionné le disque.
 Cette nouvelle partition portera le nom du disque suivi du chiffre saisi 
 lors de la creation (ex : sdb1).
 
-#### Creation d'un LVM
+### Creation d'un LVM
 
 #### Creation des volumes
 On commence par crée le volume physique (pv), ceci avec la commande
