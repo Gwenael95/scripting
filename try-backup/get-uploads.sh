@@ -7,7 +7,7 @@
 ########################################################################
 
 ## region FTP server Setup ###
-FTPD="/mnt/backups"
+FTPD="/var/backups"
 FTPU="username"
 FTPP="mot de passe"
 FTPS="192.168.0.00" # A MODIFIER

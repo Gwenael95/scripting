@@ -1,10 +1,28 @@
-# scripting
+# Scripting
 cours de scripting sur linux
 
+##Sommaire
 
-#deploiement de serveur d'hebergement de site client
+##Script d'installation
+Afin de pouvoir déployer rapidement les serveurs, des scripts .sh sont disponibles
+sur notre Github. De préférences, placé les dans le dossier /usr/local/bin de votre
+VM.
 
-##Préparation du serveur Web
+
+Utilisé le fichier ```init_vm.sh``` afin de faire l'installation complete des librairies
+nécessaire au fonctionnement du serveur web.
+Le script ```deploy_website.sh``` permet de déployer un nouveau site wordpress en 
+saissisant simplement un nom de projet et un mot de passe.
+
+
+Ajouter le script python ```firewall.py``` dans le dossier ```/usr/bin/python``` 
+(crée le dossier python si besoin).
+Lancé le avec la commande ```python3 firewall.py```.
+Ce script permettra de bloquer les ip ayant échoué 5 fois à se connecter
+
+#Service d'hébergement de sites clients
+
+##Préparation du serveur Web manuel
 
 ###Configuration de la VM
 On suppose que vous travailler en local sur une VM Linux 
@@ -39,11 +57,11 @@ Pour se connecter à votre VM depuis un terminal exterieur,
 entrer la commande ```ssh nomDeLutilisateur@ip``` 
 (ex: coding@192.168.1.30). 
 
-Un mot de passe devrait être demandé, celui de l'utilisateur
-créer sur la VM linux.
 A la première connexion, une question devrait être posé,
 afin de ne plus entrer de mot de passe au prochaines connexions. 
 On peut bien sûr entrer 'yes' ou 'no'.
+Un mot de passe devrait être demandé, celui de l'utilisateur
+créer sur la VM linux.
 
 
 ###Apache
@@ -101,6 +119,10 @@ essayer d'entrer les commandes : ```apachectl stop```,
 ```/etc/init.d/apache2 reload```.
 ]
 
+###Template Virtual host
+Ajouté un template dans /etc/apache2/sites-available/template.
+Celui-ci permettra de générer simplement un VirtualHost 
+adapté à notre utilisateur (log).
 
 ###Wordpress
 
@@ -158,20 +180,8 @@ define('DB_COLLATE', '');
 ```
 
 
-##Serveur backup
-L'objectif de ce serveur backup sera de stocker des sauvegardes
-des bases de données mysql du serveur web, afin de pouvoir restaurer
-l'ensemble des données en cas de problème important sur le serveur web.
-
-###SSH backup
-Afin de pouvoir envoyer les fichiers backup sur le serveur prévu
-à cet effet, on peut utiliser le SSH pour les transmettre.
-Vous pouvez vous référez-vous a la même section pour le 
-[serveur web](#SSH) 
-
-
 ###Cron
-On souhaite avoir des sauvegarde automatique des bases de données
+On souhaite avoir des sauvegardes automatiques des bases de données
 et d'une parti du contenu des domaines de nos utilisateurs.
 
 Il faut donc un script de backup compatible avec Cron : backup.sh.
@@ -183,7 +193,56 @@ Si cron n'est pas installé, utilisé les commandes
 Pour créer une tache cron, utilisé la commande 
 ```crontab -e```, et ajouter une ligne
 ```* * * * * /usr/local/bin/backup.sh```.
+Noté que la précédente commande avec et sans sudo seront 2 fichiers 
+bien distinct.
 
 Pour que cron puisse executer le script, ne pas oublier de donner
-les droits d'execution au script.
-```chmod 755 /usr/local/bin/backup.sh```
+les droits d'execution au script. on peut par exemple entrer la 
+commande ```sudo chmod 755 /usr/local/bin/backup.sh```.
+
+Pour recevoir les message d'erreur visible dans /var/userName/mail, 
+trés utile pour tester la tache cron,
+il vous faudra peut-être utilisé la commande ```sudo apt-get install postfix```.
+
+###Backup
+Pour des raisons de sécurité et conservation des données, nous allons transféré 
+les données compressé de nos utilisateurs avec cron sur un serveur backup.
+
+Il faut donc qu'un serveur soit configuré afin de modifier le le script ```get-uploads.sh```
+Avec les données correspondante 
+                                                              
+- FTPD => destination 
+- FTPU => username  
+- FTPP => password  
+- FTPS => ip serveur 
+
+
+
+##Preparation du serveur backup manuel
+L'objectif de ce serveur backup sera de stocker des sauvegardes
+des bases de données mysql du serveur web, afin de pouvoir restaurer
+l'ensemble des données en cas de problème important sur le serveur web.
+
+@todo expliquez toute la mise en place du serveur backup
+
+###SSH backup
+Afin de pouvoir envoyer les fichiers backup sur le serveur prévu
+à cet effet, on peut utiliser le SSH pour les transmettre.
+Vous pouvez vous référez-vous a la même section pour le 
+[serveur web](#SSH) afin de préparer le serveur
+
+###Reception des backups
+Afin de pouvoir recevoir des backups sur ce serveur depuis le serveur web,
+il faut pouvoir communiquer avec ce serveur à l'aide d'un utilisateur 
+ayant les droits d'accès au repertoire /var/backups.
+
+Creer l'utilisateur avec la commande ```adduser backupuser```, puis la commande
+```usermod -aG sudo backupuser``` afin de lui attribuer des droits sudo.
+Transmetter le nom d'utilisateur, le password et l'ip du serveur backup au 
+serveur web afin de configurer les bonnes valeurs dans le script ```get-uploads.sh```. 
+
+- FTPD => destination =/var/backups
+- FTPU => username = backupuser
+- FTPP => password = le mot de passe saisi
+- FTPS => ip serveur = 192.168.X.X
+
