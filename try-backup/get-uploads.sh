@@ -1,12 +1,29 @@
-#!/bin/sh
+#!/bin/bash
+
+### FTP server Setup ###
+FTPD="/mnt/backups"
+FTPU="username"
+FTPP="mot de passe"
+FTPS="192.168.0.00" # A MODIFIER
 
 TMP="/tmp/backup" #save backup files into tmp
+
 if [ ! -d "$TMP" ]; then
   mkdir $TMP
 fi
 
 #DOMAIN_ARRAY=()
 declare -a DOMAIN_ARRAY # array of all domains containing wp-content/uploads directory
+day=$(date +%Y%m%d)
+
+cd $TMP || return
+
+DB_FILE_NAME="$TMP/$day-db.sql"
+
+/usr/bin/mysqldump --defaults-file=/etc/mysql/my.cnf --single-transaction --all-databases --triggers --routines --user=root -password="" > "$DB_FILE_NAME"
+
+tar czf "$DB_FILE_NAME.tgz" -P "$DB_FILE_NAME"
+rm "$DB_FILE_NAME"
 
 #will save all DB and domain wp-content/uploads in tmp
 for name in /var/www/*; do
@@ -16,29 +33,19 @@ for name in /var/www/*; do
 
     domain="$(basename "$name")"
     # Create archive filename.
-    day=$(date +%Y%m%d)
     archive_file="$TMP/$day-$domain.tgz"
     echo "$archive_file created, containing $backup_files"
 
     tar czf "$archive_file" -P $backup_files
-    DOMAIN_ARRAY[${#DOMAIN_ARRAY[*]}]=$domain
 done
 
-TEST="${DOMAIN_ARRAY[*]}"
-
-##issue with mysqldump
-DB_FILE_NAME="$TMP/db.sql"
-
-#mysqldump --all-databases > "$DB_FILE_NAME" # work when not a CRON
-
-#mysqldump -u root --all-databases > "$DB_FILE_NAME"
-#mysqldump --defaults-file=/home/achamberlain/.my.cnf --databases 360_projects --single-transaction --all-databases --triggers --routines -u backup > "$DB_FILE_NAME"
-mysqldump  --single-transaction --all-databases --triggers --routines -u backup > "$DB_FILE_NAME"
-
-gzip "$DB_FILE_NAME"
-
-
-#send them to backup server, @todo test it
-#scp file1 file2 login@ip:chemin_destination/
-#scp "$TEST" login@ip:/var/backup
-
+### Dump backup using FTP ###
+cd $TMP || return
+ftp -n $FTPS <<END_SCRIPT
+quote USER $FTPU
+quote PASS $FTPP
+cd $FTPD
+prompt n
+mput *.tgz
+quit
+END_SCRIPT
