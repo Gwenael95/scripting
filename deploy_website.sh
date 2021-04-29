@@ -12,7 +12,7 @@ exist=$?
 echo $exist
 
 if [ $exist -eq 0 ]; then
-  echo "projectname exists!"
+  echo "Projectname already exist! Please retry with other project name"
   exit 1
 else
   arrIN=(${projectname//./ })
@@ -79,17 +79,17 @@ EOFMYSQL
   done
   #Fin de la config wordpress
 
-  sudo cp /etc/apache2/sites-available/template /etc/apache2/sites-available/"$projectname.conf"
+  sudo cp /etc/apache2/sites-available/template /etc/apache2/sites-available/"$projectname.local.conf"
 
-  sudo sed -i 's/template/'$username'/g' /etc/apache2/sites-available/"$projectname.conf"
+  sudo sed -i 's/template/'$username'/g' /etc/apache2/sites-available/"$projectname.local.conf"
 
   ipMachine=$(hostname -I)
 
-  sudo sed -i '1s/^/'$ipMachine'  '$projectname'\n/' /etc/hosts
+  sudo sed -i '1s/^/'$ipMachine'  '$projectname'.local\n/' /etc/hosts
 
-  sudo a2ensite "$projectname.conf"
+  sudo a2ensite "$projectname.local.conf"
   sudo service apache2 reload
 
-  echo "Done, please browse to http://$projectname to check!"
+  echo "Done, please browse to http://$projectname.local to check!"
 
 fi
