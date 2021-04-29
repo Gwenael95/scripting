@@ -25,7 +25,7 @@ cd $TMP || return
 ## region save mysql
 DB_FILE_NAME="$TMP/$DAY-db.sql"
 
-/usr/bin/mysqldump --defaults-file=/etc/mysql/my.cnf --single-transaction --all-databases --triggers --routines --user=root -password="" > "$DB_FILE_NAME"
+/usr/bin/mysqldump --defaults-file=/etc/mysql/my.cnf --single-transaction --all-databases --triggers --routines --user=root --password="" > "$DB_FILE_NAME"
 tar czf "$DB_FILE_NAME.tgz" -P "$DB_FILE_NAME"
 rm "$DB_FILE_NAME"
 ## endregion
