@@ -32,6 +32,9 @@ Cela vous permettra de recuperer l'adresse IP du serveur,
 pour se connecter en ssh (ex:192.168.1.30). 
 Elle devrait se trouver dans la section enp0s3 (inet).
 
+Maintenant, utiliser la commande 
+```sudo apt install openssh-server```. 
+
 Pour se connecter à votre VM depuis un terminal exterieur, 
 entrer la commande ```ssh nomDeLutilisateur@ip``` 
 (ex: coding@192.168.1.30). 
@@ -160,4 +163,27 @@ L'objectif de ce serveur backup sera de stocker des sauvegardes
 des bases de données mysql du serveur web, afin de pouvoir restaurer
 l'ensemble des données en cas de problème important sur le serveur web.
 
-###
+###SSH backup
+Afin de pouvoir envoyer les fichiers backup sur le serveur prévu
+à cet effet, on peut utiliser le SSH pour les transmettre.
+Vous pouvez vous référez-vous a la même section pour le 
+[serveur web](#SSH) 
+
+
+###Cron
+On souhaite avoir des sauvegarde automatique des bases de données
+et d'une parti du contenu des domaines de nos utilisateurs.
+
+Il faut donc un script de backup compatible avec Cron : backup.sh.
+Placer ce script dans /usr/local/bin.
+
+Si cron n'est pas installé, utilisé les commandes 
+```sudo apt install cron``` et ```sudo systemctl enable cron```.
+
+Pour créer une tache cron, utilisé la commande 
+```crontab -e```, et ajouter une ligne
+```* * * * * /usr/local/bin/backup.sh```.
+
+Pour que cron puisse executer le script, ne pas oublier de donner
+les droits d'execution au script.
+```chmod 755 /usr/local/bin/backup.sh```
