@@ -1,12 +1,21 @@
 #!/bin/bash
 
+########################################################################
+# This script is used to deploy a new wordpress site on our server.    #
+# We create a new user on server, also on mysql and its database.      #
+# We prepare the virtualHost and all config to deploy wordpress easily.#
+########################################################################
+
 wget=/usr/bin/wget
 tar=/bin/tar
 
 WORDPRESS="https://fr.wordpress.org/latest-fr_FR.tar.gz"
 
+# get project name and password, in order to create user
 read -p "Enter a project name : " projectname
 read -s -p "Enter password : " password
+
+# check any project has same name
 egrep "^$projectname" /etc/passwd >/dev/null
 exist=$?
 echo $exist
@@ -15,48 +24,50 @@ if [ $exist -eq 0 ]; then
   echo "projectname exists!"
   exit 1
 else
-  arrIN=(${projectname//./ })
+  ARR_IN=("${projectname//./ }")
 
-  username="${arrIN[0]}"
-  sudo useradd -m -G "www-data" -p "$password" "$username"
+  USERNAME="${ARR_IN[0]}"
 
+  ## region create user
+  sudo useradd -m -G "www-data" -p "$password" "$USERNAME"
   [ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!"
+  ## endregion
 
-  #create database, user, with all privileges on his table
+  ## region create database, user, with all privileges on his table
   REQUEST="
-  CREATE DATABASE $username CHARACTER SET UTF8 COLLATE UTF8_BIN;
-  CREATE USER '$username'@'%' IDENTIFIED BY '$password';
-  GRANT ALL PRIVILEGES ON $username.* TO '$username'@'%';
+  CREATE DATABASE $USERNAME CHARACTER SET UTF8 COLLATE UTF8_BIN;
+  CREATE USER '$USERNAME'@'%' IDENTIFIED BY '$password';
+  GRANT ALL PRIVILEGES ON $USERNAME.* TO '$USERNAME'@'%';
   FLUSH PRIVILEGES;
   "
   mysql --user=root <<EOFMYSQL
   $REQUEST
 EOFMYSQL
+  ## endregion
 
-  mkdir "/var/www/$username"
+  ## region user website folder
+  mkdir "/var/www/$USERNAME"
+  cd "/var/www/$USERNAME" || return
+  ## endregion
 
-  cd "/var/www/$username" || return
-
-  # wget to download VERSION file
+  ## region wget to download VERSION file
   $wget "${WORDPRESS}"
-
   $tar xvf "latest-fr_FR.tar.gz"
 
-  sudo mv "/var/www/$username/wordpress/"* "/var/www/$username"
-
+  sudo mv "/var/www/$USERNAME/wordpress/"* "/var/www/$USERNAME"
   sudo rm -r "wordpress"
+  ## endregion
 
-  sudo cp /var/www/$username/wp-config-sample.php /var/www/$username/wp-config.php
 
-  sudo chmod -R 755 "/var/www/$username"
+  sudo chmod -R 755 "/var/www/$USERNAME"
 
-  mkdir "/var/www/$username/logs"
-  cd "/var/www/$username/logs" && touch "error.log" && touch "access.log"
+  mkdir "/var/www/$USERNAME/logs"
+  cd "/var/www/$USERNAME/logs" && touch "error.log" && touch "access.log"
   sudo service apache2 reload
 
-  #Prepare la config de wordpress
-  DB_NAME=$username
-  DB_USER=$username
+  ## region Prepar wordpress config
+  DB_NAME=$USERNAME
+  DB_USER=$USERNAME
   DB_PASSWORD=$password
   DB_HOST="localhost"
 
@@ -66,29 +77,29 @@ EOFMYSQL
   DB_PASSWORD=< /dev/urandom tr -dc A-Za-z0-9 | head -c14;
 
   # generate wp-config.php by copying wp-config-sample.php
-  sudo cp /var/www/$username/wp-config-sample.php /var/www/$username/wp-config.php
+  sudo cp "/var/www/$USERNAME/wp-config-sample.php" "/var/www/$USERNAME/wp-config.php"
   DB_DEFINES=('DB_NAME' 'DB_USER' 'DB_PASSWORD' 'DB_HOST' 'WPLANG')
 
-  #loop for update all the config file DB data
-  for DB_PROPERTY in ${DB_DEFINES[@]} ;
+  ## region loop for update all the config file DB data row
+  for DB_PROPERTY in "${DB_DEFINES[@]}" ;
   do
-      OLD="define(.*'$DB_PROPERTY', '.*'.*);"
       NEW="define('$DB_PROPERTY', '${!DB_PROPERTY}');"  # Will probably need some pretty crazy escaping to allow for better passwords
-
-      sed "/$DB_PROPERTY/s/.*/$NEW/" /var/www/$username/wp-config.php > $TEMP_FILE && mv $TEMP_FILE /var/www/$username/wp-config.php
+      sed "/$DB_PROPERTY/s/.*/$NEW/" "/var/www/$USERNAME/wp-config.php" > $TEMP_FILE && mv $TEMP_FILE "/var/www/$USERNAME/wp-config.php"
   done
-  #Fin de la config wordpress
+  ## endregion
+  ## endregion
 
-  sudo cp /etc/apache2/sites-available/template /etc/apache2/sites-available/"$projectname.conf"
 
-  sudo sed -i 's/template/'$username'/g' /etc/apache2/sites-available/"$projectname.conf"
+  ## region enable site
+  sudo cp /etc/apache2/sites-available/template "/etc/apache2/sites-available/$projectname.conf"
+  sudo sed -i "s/template/$USERNAME/g" "/etc/apache2/sites-available/$projectname.conf"
 
-  ipMachine=$(hostname -I)
-
-  sudo sed -i '1s/^/'$ipMachine'  '$projectname'\n/' /etc/hosts
+  IP_MACHINE=$(hostname -I)
+  sudo sed -i "1s/^/$IP_MACHINE"  "$projectname\n/" /etc/hosts
 
   sudo a2ensite "$projectname.conf"
   sudo service apache2 reload
+  ## endregion
 
   echo "Done, please browse to http://$projectname to check!"
 
