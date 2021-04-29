@@ -22,10 +22,16 @@ else
 
   [ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!"
 
-  mysql -u root "" -e "CREATE DATABASE $username CHARACTER SET UTF8 COLLATE UTF8_BIN;"
-  mysql -u root "" -e "CREATE USER '$username'@'%' IDENTIFIED BY '$password';"
-  mysql -u root "" -e "GRANT ALL PRIVILEGES ON $username.* TO '$username'@'%';"
-  mysql -u root "" -e "FLUSH PRIVILEGES;"
+  #create database, user, with all privileges on his table
+  REQUEST="
+  CREATE DATABASE $username CHARACTER SET UTF8 COLLATE UTF8_BIN;
+  CREATE USER '$username'@'%' IDENTIFIED BY '$password';
+  GRANT ALL PRIVILEGES ON $username.* TO '$username'@'%';
+  FLUSH PRIVILEGES;
+  "
+  mysql --user=root <<EOFMYSQL
+  $REQUEST
+EOFMYSQL
 
   mkdir "/var/www/$username"
 
@@ -40,13 +46,42 @@ else
 
   sudo rm -r "wordpress"
 
+  sudo cp /var/www/$username/wp-config-sample.php /var/www/$username/wp-config.php
+
   sudo chmod -R 755 "/var/www/$username"
+
+  #Prepare la config de wordpress
+  DB_NAME=$username
+  DB_USER=$username
+  DB_PASSWORD=$password
+  DB_HOST="localhost"
+
+  TEMP_FILE="/tmp/out.tmp.$$"
+
+  # try generate random password
+  DB_PASSWORD=< /dev/urandom tr -dc A-Za-z0-9 | head -c14;
+
+  # generate wp-config.php by copying wp-config-sample.php
+  sudo cp /var/www/$username/wp-config-sample.php /var/www/$username/wp-config.php
+  DB_DEFINES=('DB_NAME' 'DB_USER' 'DB_PASSWORD' 'DB_HOST' 'WPLANG')
+
+  #loop for update all the config file DB data
+  for DB_PROPERTY in ${DB_DEFINES[@]} ;
+  do
+      OLD="define(.*'$DB_PROPERTY', '.*'.*);"
+      NEW="define('$DB_PROPERTY', '${!DB_PROPERTY}');"  # Will probably need some pretty crazy escaping to allow for better passwords
+
+      sed "/$DB_PROPERTY/s/.*/$NEW/" /var/www/$username/wp-config.php > $TEMP_FILE && mv $TEMP_FILE /var/www/$username/wp-config.php
+  done
+  #Fin de la config wordpress
 
   sudo cp /etc/apache2/sites-available/template /etc/apache2/sites-available/"$projectname.conf"
 
   sudo sed -i 's/template/'$username'/g' /etc/apache2/sites-available/"$projectname.conf"
 
-  sudo sed -i '1s/^/192.168.1.61  '$projectname'\n/' /etc/hosts
+  ipMachine=$(hostname -I)
+
+  sudo sed -i '1s/^/'$ipMachine'  '$projectname'\n/' /etc/hosts
 
   sudo a2ensite "$projectname.conf"
   sudo service apache2 reload
