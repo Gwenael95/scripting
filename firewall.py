@@ -6,6 +6,9 @@ import signal
 import subprocess
 import select
 import datetime
+import argparse
+import yaml
+from os import path
 
 is_running = None
 log_file = None
@@ -51,49 +54,84 @@ def process():
         ip = log[0]
         date = datetime.datetime.strptime(log[3][1:], '%d/%b/%Y:%H:%M:%S')
         request = log[6]
-        path = log[7]
+        request_path = log[7]
         code = int(log[10])
-        print(f"{ip} at {date} : {request} -> {path} : {code}\n")
+        print(f"{ip} at {date} : {request} -> {request_path} : {code}")
 
-        if request == "POST" and path == "/wp-login.php" and code != 302:
+        if request == "POST" and request_path == "/wp-login.php" and code != 302:
             if ip in blocked:
                 if (date - blocked[ip][0]).total_seconds() <= 300:
                     blocked[ip][0] = date
                     blocked[ip][1] += 1
-                    print(f"{ip} try connection: {blocked[ip][1]}\n")
+                    print(f"\n{ip} try connection: {blocked[ip][1]}\n")
                     if blocked[ip][1] == 5:
                         ban_ip(ip)
                 else:
                     blocked[ip] = [date, 1]
-                    print(f"Ip {ip} reseted to 1.\n")
+                    print(f"\nIp {ip} reseted to 1.\n")
             else:
                 if (datetime.datetime.now() - date).total_seconds() <= 5:
                     blocked[ip] = [date, 1]
-                    print(f"New ip detected : {ip}\n")
+                    print(f"\nNew ip detected : {ip}\n")
 
-        elif request == "GET" and "/wp-admin.php" in path and code == 302:
+        elif request == "GET" and request_path == "/wp-admin/" and code == 200:
             if ip in blocked:
                 del blocked[ip]
-                print(f"Ip {ip} removed.\n")
+                print(f"\nIp {ip} removed.\n")
 
 
 def ban_ip(ip):
     """Ban ip"""
-    print(f"{ip} is now banned!")
     subprocess.call(f"iptables -A INPUT -s {ip} -j DROP", shell=True)
+    print(f"{ip} is now banned!")
 
 
 def purge_iptables():
     """Purge logs"""
-    print("\niptables purged!")
     subprocess.call(f"iptables -F", shell=True)
+    print("\niptables purged!")
 
 
-def main():
+def main(command_line=None):
     """Main function"""
-    init("test")
+    global is_running
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", default="config.yaml", help="Configuration file to load.")
+    args = parser.parse_args(command_line)
+
+    # check if file exist
+    if not path.exists(args.config):
+        print("\nError!")
+        print(f"File {args.config} is not found!")
+        print(f"Please create it ({args.config}) (.yaml file) and edit it to fill the field 'hostname'.\n")
+        print("Example:\nhostname: \"MyName\"\n")
+        return 1
+
+    # check if file is an YAML file
+    if not args.config.lower().endswith(".yaml"):
+        print("\nError!")
+        print("Selected file isn't a YAML file!\n")
+        return 1
+
+    # read the file
+    with open(args.config, "r") as s:
+        y = yaml.safe_load(s)
+        try:
+            hostname = y["hostname"]
+        except:
+            hostname = None
+        finally:
+            # check hostname
+            if hostname is None or len(hostname) == 0:
+                print("\nError!")
+                print(f"Field 'hostname' has no value in {args.config} file!\n")
+                return 1
+
+    init(hostname)
     while is_running:
         process()
+    return 0
 
 
 if __name__ == '__main__':
