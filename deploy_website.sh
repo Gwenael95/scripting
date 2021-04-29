@@ -50,6 +50,10 @@ EOFMYSQL
 
   sudo chmod -R 755 "/var/www/$username"
 
+  mkdir "/var/www/$username/logs"
+  cd "/var/www/$username/logs" && touch "error.log" && touch "access.log"
+  sudo service apache2 reload
+
   #Prepare la config de wordpress
   DB_NAME=$username
   DB_USER=$username
