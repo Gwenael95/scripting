@@ -6,7 +6,9 @@
 
 clear
 echo "This script will install :"
-echo "apache2 "
+echo "net-tools"
+echo "tree"
+echo "apache2"
 echo "openssh-server"
 echo "mysql-server mysql-client"
 echo "php7.4 php7.4-mysql libapache2-mod-php7.4"
@@ -14,6 +16,7 @@ echo ""
 
 sudo apt -y update
 sudo apt -y install net-tools
+sudo apt -y install tree
 sudo apt-get -y install apache2
 sudo apt-get -y install openssh-server
 sudo apt-get -y install mysql-server mysql-client
