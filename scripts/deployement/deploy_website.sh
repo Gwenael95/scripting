@@ -80,6 +80,12 @@ else
 
   ## region wget to download VERSION file
   $wget "${_WORDPRESS}"
+  exist=$?
+  if [ $exist -ne 0 ]; then
+    echo "wget failed"
+    exit 1
+  fi
+
   $tar xvf "latest-fr_FR.tar.gz"
 
   sudo mv "/var/www/$USERNAME/wordpress/"* "/var/www/$USERNAME"
