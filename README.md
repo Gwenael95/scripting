@@ -84,8 +84,9 @@ sur wordpress en utilisant iptables.
 
 ## Template
 Un repertoire template contient tout les templates disponibles,
-notamment utilisé pour préparé les virtualHost.
-
+notamment utilisé pour préparer les virtualHost.
+Placer le template de virtual host (template_vh) dans 
+```/etc/apache2/sites-available/```
 
 ## Preparation du serveur Web manuel
 
