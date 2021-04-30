@@ -122,16 +122,16 @@ else
 
 
   ## region enable site
-  sudo cp "/etc/apache2/sites-available/$_TEMPLATE_VH" "/etc/apache2/sites-available/$PROJECT_NAME.conf"
-  sudo sed -i "s/__PROJECTNAME__/$USERNAME/g" "/etc/apache2/sites-available/$PROJECT_NAME.conf"
+  sudo cp "/etc/apache2/sites-available/$_TEMPLATE_VH" "/etc/apache2/sites-available/$PROJECT_NAME.local.conf"
+  sudo sed -i "s/__PROJECTNAME__/$USERNAME/g" "/etc/apache2/sites-available/$PROJECT_NAME.local.conf"
 
   IP_MACHINE=$(hostname -I)
-  sudo sed -i "1s/^/$IP_MACHINE"  "$PROJECT_NAME\n/" /etc/hosts
+  sudo sed -i "1s/^/$IP_MACHINE"  "$PROJECT_NAME.local\n/" /etc/hosts
 
-  sudo a2ensite "$PROJECT_NAME.conf"
+  sudo a2ensite "$PROJECT_NAME.local.conf"
   sudo service apache2 reload
   ## endregion
 
-  echo "Done, please browse to http://$PROJECT_NAME to check!"
+  echo "Done, please browse to http://$PROJECT_NAME.local to check!"
 
 fi
