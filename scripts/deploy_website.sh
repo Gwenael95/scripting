@@ -11,12 +11,55 @@ tar=/bin/tar
 
 WORDPRESS="https://fr.wordpress.org/latest-fr_FR.tar.gz"
 
-# get project name and password, in order to create user
-read -p "Enter a project name : " projectname
-read -s -p "Enter password : " password
+## region optional args
+while getopts n:p:h:f flag
+do
+    case "${flag}" in
+        n) PROJECT_NAME=${OPTARG};;
+        p) PASSWORD=${OPTARG};;
+        h) HELP=true;;
+        f) FORCE=true
+    esac
+done
+## endregion
+
+## region help
+if [ -n "$HELP" ]; then
+  echo "
+  use -n to give a project name.
+  use -p to set a password.
+  use -f to force creation (don't ask confirmation).
+  "
+  exit 0
+fi
+## endregion
+
+# get project name and password, in order to create user if not in options
+if [ -z "$PROJECT_NAME" ]; then
+  read -p "Enter a project name : " PROJECT_NAME
+fi
+if [ -z "$PASSWORD" ]; then
+  read -s -p "Enter password : " PASSWORD
+fi
+## endregion
+
+## region confirm creation if no -f option
+if [ -z "$FORCE" ]; then
+  read -p "A new site will be created with user= $PROJECT_NAME and password= $PASSWORD.
+ Should we create it?[y/n]" CONFIRM
+fi
+
+if ( [ -n "$FORCE" ] && $FORCE) || [ "$CONFIRM" = "y" ] || [ "$CONFIRM" = "yes" ] ; then
+    echo "Site for $PROJECT_NAME is ready to be created."
+else
+    echo "Cancel project."
+    exit 0
+fi
+## endregion
+
 
 # check any project has same name
-egrep "^$projectname" /etc/passwd >/dev/null
+egrep "^$PROJECT_NAME" /etc/passwd >/dev/null
 exist=$?
 echo $exist
 
@@ -24,19 +67,19 @@ if [ $exist -eq 0 ]; then
   echo "projectname exists!"
   exit 1
 else
-  ARR_IN=("${projectname//./ }")
+  ARR_IN=("${PROJECT_NAME//./ }")
 
   USERNAME="${ARR_IN[0]}"
 
   ## region create user
-  sudo useradd -m -G "www-data" -p "$password" "$USERNAME"
+  sudo useradd -m -G "www-data" -p "$PASSWORD" "$USERNAME"
   [ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!"
   ## endregion
 
   ## region create database, user, with all privileges on his table
   REQUEST="
   CREATE DATABASE $USERNAME CHARACTER SET UTF8 COLLATE UTF8_BIN;
-  CREATE USER '$USERNAME'@'%' IDENTIFIED BY '$password';
+  CREATE USER '$USERNAME'@'%' IDENTIFIED BY '$PASSWORD';
   GRANT ALL PRIVILEGES ON $USERNAME.* TO '$USERNAME'@'%';
   FLUSH PRIVILEGES;
   "
@@ -68,7 +111,7 @@ EOFMYSQL
   ## region Prepar wordpress config
   DB_NAME=$USERNAME
   DB_USER=$USERNAME
-  DB_PASSWORD=$password
+  DB_PASSWORD=$PASSWORD
   DB_HOST="localhost"
 
   TEMP_FILE="/tmp/out.tmp.$$"
@@ -91,16 +134,16 @@ EOFMYSQL
 
 
   ## region enable site
-  sudo cp /etc/apache2/sites-available/template "/etc/apache2/sites-available/$projectname.conf"
-  sudo sed -i "s/template/$USERNAME/g" "/etc/apache2/sites-available/$projectname.conf"
+  sudo cp /etc/apache2/sites-available/template "/etc/apache2/sites-available/$PROJECT_NAME.conf"
+  sudo sed -i "s/template/$USERNAME/g" "/etc/apache2/sites-available/$PROJECT_NAME.conf"
 
   IP_MACHINE=$(hostname -I)
-  sudo sed -i "1s/^/$IP_MACHINE"  "$projectname\n/" /etc/hosts
+  sudo sed -i "1s/^/$IP_MACHINE"  "$PROJECT_NAME\n/" /etc/hosts
 
-  sudo a2ensite "$projectname.conf"
+  sudo a2ensite "$PROJECT_NAME.conf"
   sudo service apache2 reload
   ## endregion
 
-  echo "Done, please browse to http://$projectname to check!"
+  echo "Done, please browse to http://$PROJECT_NAME to check!"
 
 fi
