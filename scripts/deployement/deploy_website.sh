@@ -124,6 +124,9 @@ if [ $exist -ne 0 ]; then
   exit 1
 fi
 
+clear
+echo "Wordpress is downloaded"
+
 $tar xvf "latest-fr_FR.tar.gz"
 
 sudo mv "/var/www/$PROJECT_NAME/wordpress/"* "/var/www/$PROJECT_NAME"
@@ -162,7 +165,7 @@ sudo cp "/etc/apache2/sites-available/$_TEMPLATE_VH" "/etc/apache2/sites-availab
 sudo sed -i "s/__PROJECTNAME__/$PROJECT_NAME/g" "/etc/apache2/sites-available/$PROJECT_NAME.conf"
 
 IP_MACHINE=$(hostname -I)
-sudo sed -i "1s/^/$IP_MACHINE"  "$PROJECT_NAME\n/" /etc/hosts
+sudo sed -i "1s/^/$IP_MACHINE $PROJECT_NAME\n/" /etc/hosts
 
 sudo a2ensite "$PROJECT_NAME.conf"
 sudo service apache2 reload
