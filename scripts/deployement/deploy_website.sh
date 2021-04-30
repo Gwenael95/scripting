@@ -38,6 +38,12 @@ if [ -n "$HELP" ]; then
 fi
 ## endregion
 
+echo "¤ Deploy website ¤"
+echo ""
+echo "Be sure to be in 'sudo su' before starting..."
+echo "Else, press Ctrl+C and do it!"
+echo ""
+
 # get project name and password, in order to create user if not in options
 if [ -z "$PROJECT_NAME" ]; then
   read -p "Enter a project name (without extension) : " PROJECT_NAME
@@ -166,6 +172,8 @@ sudo sed -i "s/__PROJECTNAME__/$PROJECT_NAME/g" "/etc/apache2/sites-available/$P
 
 IP_MACHINE=$(hostname -I)
 sudo sed -i "1s/^/$IP_MACHINE $PROJECT_NAME\n/" /etc/hosts
+
+sudo sed -i "1s/^/hostname:'$PROJECT_NAME'" "/usr/bin/python/$PROJECT_NAME.yaml"
 
 sudo a2ensite "$PROJECT_NAME.conf"
 sudo service apache2 reload
