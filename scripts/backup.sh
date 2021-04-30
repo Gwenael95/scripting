@@ -52,6 +52,8 @@ ftp -n $FTPS <<END_SCRIPT
 quote USER $FTPU
 quote PASS $FTPP
 cd $FTPD
+mkdir $DAY-log
+cd $DAY-log
 prompt n
 mput *.tgz
 quit
