@@ -52,10 +52,23 @@ vous aurez probablement besoin des droits sudo.
 ## Script d'installation
 Afin de pouvoir déployer rapidement les serveurs, des scripts .sh sont disponibles
 sur notre Github. 
+Ces scripts sont disponibles dans le dossier ```/scripts```.
 De préférences, placer les dans le dossier ```/usr/local/bin``` de votre VM.
 
 Utiliser le fichier ```init_vm.sh``` afin de faire l'installation complète des librairies
 nécessaire au fonctionnement du serveur web.
+
+## Firewall
+Un repertoire python contient tous les scripts python,
+notamment utilisé pour le firewall.
+Vérifier que les fichiers ```firewall.py``` et ```config.yaml``` sont bien présents dans : 
+```/usr/bin/python/```
+
+## Template
+Un repertoire template contient tous les templates disponibles,
+notamment utilisé pour préparer les virtualHost.
+Vérifier que le fichier ```template``` est bien présent dans : 
+```/etc/apache2/sites-available/```
 
 Le script ```deploy_website.sh``` permet de déployer un nouveau site wordpress.
 On peut saisir les commandes 
@@ -66,13 +79,20 @@ Si aucun mot de passe n'est saisie, il sera généré automatiquement.
 - -f : permet de forcer la création, afin de passer la confirmation de création.
 - -h : help.
 
+Le script ```mysql_create.sh``` permet de crée un utilisateur mysql ainsi
+qu'une base de données si un nom d'utilisateur et mot de passe et fourni.
+On peut saisir les commandes 
+- -n : nom de l'utilisateur et de la database.
+Si aucun nom n'est renseigné, le script s'arrete.
+- -p : mot de passe de l'utilisateur.
+Si aucun mot de passe n'est saisie, le script s'arrete.
+- -h : help.
 
 Ajouter le script python ```firewall.py``` dans le dossier ```/usr/bin/python``` 
 (crée le dossier python si besoin).
 Lancer le script avec la commande ```python3 firewall.py```.
 Ce script permettra de bloquer les ip ayant échoué 5 fois à la connexion 
 sur wordpress en utilisant iptables.
-
 
 ## Preparation du serveur Web manuel
 

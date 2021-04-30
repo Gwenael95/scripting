@@ -89,7 +89,7 @@ $REQUEST
 EOFMYSQL
 
 
-#cd ./template
+#cd ./template_vh
 #./setup.sh
 
 exit 0

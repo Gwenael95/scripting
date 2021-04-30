@@ -7,27 +7,27 @@
 ########################################################################
 
 ## region FTP server Setup ###
-FTPD="/var/backups"
-FTPU="username"
-FTPP="mot de passe"
-FTPS="192.168.0.00" # A MODIFIER
+_FTPD="/var/backups/backupweb"
+_FTPU="username"
+_FTPP="mot de passe"
+_FTPS="192.168.0.00" # A MODIFIER
 ## endregion
 
-DAY=$(date +%Y%m%d)
+_DAY=$(date +%Y%m%d)
 
-TMP="/tmp/backup" #save backup files into tmp
+_TMP="/tmp/backup" #save backup files into tmp
 
-if [ ! -d "$TMP" ]; then
-  mkdir $TMP
+if [ ! -d "$_TMP" ]; then
+  mkdir $_TMP
 fi
-cd $TMP || return
+cd $_TMP || return
 
 ## region save mysql
-DB_FILE_NAME="$TMP/$DAY-db.sql"
+_DB_FILE_NAME="$_TMP/$_DAY-db.sql"
 
-/usr/bin/mysqldump --defaults-file=/etc/mysql/my.cnf --single-transaction --all-databases --triggers --routines --user=root --password="" > "$DB_FILE_NAME"
-tar czf "$DB_FILE_NAME.tgz" -P "$DB_FILE_NAME"
-rm "$DB_FILE_NAME"
+/usr/bin/mysqldump --defaults-file=/etc/mysql/my.cnf --single-transaction --all-databases --triggers --routines --user=root --password="" > "$_DB_FILE_NAME"
+tar czf "$_DB_FILE_NAME.tgz" -P "$_DB_FILE_NAME"
+rm "$_DB_FILE_NAME"
 ## endregion
 
 ## region save domain wp-content/uploads in tmp
@@ -38,20 +38,22 @@ for name in /var/www/*; do
 
     domain="$(basename "$name")"
     # Create archive filename.
-    archive_file="$TMP/$DAY-$domain.tgz"
+    archive_file="$_TMP/$_DAY-$domain.tgz"
     echo "$archive_file created, containing $backup_files"
 
-    tar czf "$archive_file" -P $backup_files
+    tar czf "$archive_file" -P "$backup_files"
 done
 ## endregion
 
 
 ## region Dump backup using FTP ###
-cd $TMP || return
-ftp -n $FTPS <<END_SCRIPT
-quote USER $FTPU
-quote PASS $FTPP
-cd $FTPD
+cd $_TMP || return
+ftp -n $_FTPS <<END_SCRIPT
+quote USER $_FTPU
+quote PASS $_FTPP
+cd $_FTPD
+mkdir $_DAY-log
+cd $_DAY-log
 prompt n
 mput *.tgz
 quit
