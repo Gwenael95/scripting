@@ -132,7 +132,7 @@ EOFMYSQL
 
   ## region enable site
   sudo cp /etc/apache2/sites-available/template "/etc/apache2/sites-available/$PROJECT_NAME.conf"
-  sudo sed -i "s/template/$USERNAME/g" "/etc/apache2/sites-available/$PROJECT_NAME.conf"
+  sudo sed -i "s/__PROJECTNAME__/$USERNAME/g" "/etc/apache2/sites-available/$PROJECT_NAME.conf"
 
   IP_MACHINE=$(hostname -I)
   sudo sed -i "1s/^/$IP_MACHINE"  "$PROJECT_NAME\n/" /etc/hosts

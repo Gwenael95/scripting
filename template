@@ -1,13 +1,13 @@
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
 
-    ServerName template.local
-    DocumentRoot /var/www/template
+    ServerName __PROJECTNAME__.local
+    DocumentRoot /var/www/__PROJECTNAME__
     <Directory />
         Options FollowSymLinks
         AllowOverride All
     </Directory>
-    <Directory /var/www/template/>
+    <Directory /var/www/__PROJECTNAME__/>
         Options Indexes FollowSymLinks MultiViews
         AllowOverride All
         Order allow,deny
@@ -22,11 +22,11 @@
         Allow from all
     </Directory>
 
-    ErrorLog /var/www/template/logs/error.log
+    ErrorLog /var/www/__PROJECTNAME__/logs/error.log
 
     # Possible values include: debug, info, notice, warn, error, crit,
     # alert, emerg.
     LogLevel warn
 
-    CustomLog /var/www/template/logs/access.log combined
+    CustomLog /var/www/__PROJECTNAME__/logs/access.log combined
 </VirtualHost>
