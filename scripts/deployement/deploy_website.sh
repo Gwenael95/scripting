@@ -9,7 +9,8 @@
 wget=/usr/bin/wget
 tar=/bin/tar
 
-WORDPRESS="https://fr.wordpress.org/latest-fr_FR.tar.gz"
+_WORDPRESS="https://fr.wordpress.org/latest-fr_FR.tar.gz"
+_TEMPLATE_VH="template_vh"
 
 ## region optional args
 while getopts n:p:h:f flag
@@ -78,7 +79,7 @@ else
   ## endregion
 
   ## region wget to download VERSION file
-  $wget "${WORDPRESS}"
+  $wget "${_WORDPRESS}"
   $tar xvf "latest-fr_FR.tar.gz"
 
   sudo mv "/var/www/$USERNAME/wordpress/"* "/var/www/$USERNAME"
@@ -102,10 +103,10 @@ else
 
   # generate wp-config.php by copying wp-config-sample.php
   sudo cp "/var/www/$USERNAME/wp-config-sample.php" "/var/www/$USERNAME/wp-config.php"
-  DB_DEFINES=('DB_NAME' 'DB_USER' 'DB_PASSWORD' 'DB_HOST' 'WPLANG')
+  _DB_DEFINES=('DB_NAME' 'DB_USER' 'DB_PASSWORD' 'DB_HOST' 'WPLANG')
 
   ## region loop for update all the config file DB data row
-  for DB_PROPERTY in "${DB_DEFINES[@]}" ;
+  for DB_PROPERTY in "${_DB_DEFINES[@]}" ;
   do
       NEW="define('$DB_PROPERTY', '${!DB_PROPERTY}');"  # Will probably need some pretty crazy escaping to allow for better passwords
       sed "/$DB_PROPERTY/s/.*/$NEW/" "/var/www/$USERNAME/wp-config.php" > $TEMP_FILE && mv $TEMP_FILE "/var/www/$USERNAME/wp-config.php"
@@ -115,7 +116,7 @@ else
 
 
   ## region enable site
-  sudo cp /etc/apache2/sites-available/template "/etc/apache2/sites-available/$PROJECT_NAME.conf"
+  sudo cp "/etc/apache2/sites-available/$_TEMPLATE_VH" "/etc/apache2/sites-available/$PROJECT_NAME.conf"
   sudo sed -i "s/__PROJECTNAME__/$USERNAME/g" "/etc/apache2/sites-available/$PROJECT_NAME.conf"
 
   IP_MACHINE=$(hostname -I)
