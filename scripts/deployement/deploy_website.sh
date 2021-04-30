@@ -8,33 +8,44 @@
 
 wget=/usr/bin/wget
 tar=/bin/tar
+wordpress_path="latest-fr_FR.tar.gz"
 
 _WORDPRESS="https://fr.wordpress.org/latest-fr_FR.tar.gz"
 _TEMPLATE_VH="template_vh"
+
+function get_wordpress() {
+$wget "${_WORDPRESS}"
+exist=$?
+if [ $exist -ne 0 ]; then
+  echo "wget ${_WORDPRESS} failed"
+  exit 1
+fi
+$tar xvf $wordpress_path
+}
 
 clear
 
 ## region optional args
 while getopts n:p:hf flag
 do
-    case "${flag}" in
-        n) PROJECT_NAME=${OPTARG};;
-        p) PASSWORD=${OPTARG};;
-        h) HELP=true;;
-        f) FORCE=true;;
-    esac
+  case "${flag}" in
+      n) PROJECT_NAME=${OPTARG};;
+      p) PASSWORD=${OPTARG};;
+      h) HELP=true;;
+      f) FORCE=true;;
+  esac
 done
 ## endregion
 
 ## region help
 if [ -n "$HELP" ]; then
-  echo "
-   Use -h to ask help.
-   Use -n to give a project name without extension.
-   Use -p to set a password.
-   Use -f to force creation (don't ask confirmation).
-  "
-  exit 0
+echo "
+ Use -h to ask help.
+ Use -n to give a project name without extension.
+ Use -p to set a password.
+ Use -f to force creation (don't ask confirmation).
+"
+exit 0
 fi
 ## endregion
 
@@ -44,19 +55,28 @@ echo "Be sure to be in 'sudo su' before starting..."
 echo "Else, press Ctrl+C and do it!"
 echo ""
 
+ls
+IS_WORDPRESS_ALREADY_DOWNLOADED=false
+
+if [ ! -f "$wordpress_path" ] ; then
+IS_WORDPRESS_ALREADY_DOWNLOADED=true
+fi
+
+echo "IS_WORDPRESS_ALREADY_DOWNLOADED: $IS_WORDPRESS_ALREADY_DOWNLOADED"
+
 # get project name and password, in order to create user if not in options
 if [ -z "$PROJECT_NAME" ]; then
-  read -p "Enter a project name (without extension) : " PROJECT_NAME
+read -p "Enter a project name (without extension) : " PROJECT_NAME
 fi
 
 echo "Choose your extension:"
 echo ""
 select extension in "net" "com" "local" "org"
 do
-  if [ -n "$extension" ] ; then
-      echo "You have chosen $extension"
-      break
-  fi
+if [ -n "$extension" ] ; then
+    echo "You have chosen $extension"
+    break
+fi
 done
 
 PROJECT_NAME=$PROJECT_NAME.$extension
@@ -67,14 +87,14 @@ echo "Confirm your choice:"
 echo ""
 select confirmation in "yes" "no"
 do
-  if [ -n "$confirmation" ] ; then
-      echo "You have chosen $confirmation"
-      if [ $confirmation = "no" ] ; then
-        echo "Exit..."
-        exit 1
-      fi
-      break
-  fi
+if [ -n "$confirmation" ] ; then
+    echo "You have chosen $confirmation"
+    if [ $confirmation = "no" ] ; then
+      echo "Exit..."
+      exit 1
+    fi
+    break
+fi
 done
 
 # check any project has same name
@@ -83,26 +103,26 @@ exist=$?
 echo $exist
 
 if [ $exist -eq 0 ]; then
-  echo "Project $PROJECT_NAME already exists!"
-  exit 1
+echo "Project $PROJECT_NAME already exists!"
+exit 1
 fi
 
 if [ -z "$PASSWORD" ]; then
-  PASSWORD=$(</dev/urandom tr -dc _!A-Z-a-z-0-9 | head -c12)
+PASSWORD=$(</dev/urandom tr -dc _!A-Z-a-z-0-9 | head -c12)
 fi
 ## endregion
 
 ## region confirm creation if no -f option
 if [ -z "$FORCE" ]; then
-  read -p "A new site will be created with user= $PROJECT_NAME and password= $PASSWORD.
- Should we create it? [y/n]" CONFIRM
+read -p "A new site will be created with user= $PROJECT_NAME and password= $PASSWORD
+Should we create it? [y/n]" CONFIRM
 fi
 
 if ( [ -n "$FORCE" ] && $FORCE) || [ "$CONFIRM" = "y" ] || [ "$CONFIRM" = "yes" ] || [ "$CONFIRM" = "Y" ] ; then
-    echo "Site for $PROJECT_NAME is ready to be created."
+  echo "Site for $PROJECT_NAME is ready to be created."
 else
-    echo "Cancel project."
-    exit 0
+  echo "Cancel project."
+  exit 0
 fi
 ## endregion
 
@@ -123,17 +143,23 @@ cd "/var/www/$PROJECT_NAME" || return
 ## endregion
 
 ## region wget to download VERSION file
-$wget "${_WORDPRESS}"
-exist=$?
-if [ $exist -ne 0 ]; then
-  echo "wget failed"
-  exit 1
+if [ ! $IS_WORDPRESS_ALREADY_DOWNLOADED ] ; then
+echo "Ready to donwload"
+get_wordpress
+else
+echo "$wordpress_path is already donwloaded!"
+date_now=$(date +%s)
+date_file=$(date -r "$wordpress_path" +%s)
+seconds_between=($date_now-$date_file)
+seconds_in_1_week=$((60*60*24*7))
+if [ $seconds_between >= $seconds_in_1_week ] ; then
+  sudo rm "$wordpress_path"
+  echo "Ready to re donwload"
+  get_wordpress
+else
+  echo "$wordpress_path is already donwloaded!"
 fi
-
-clear
-echo "Wordpress is downloaded"
-
-$tar xvf "latest-fr_FR.tar.gz"
+fi
 
 sudo mv "/var/www/$PROJECT_NAME/wordpress/"* "/var/www/$PROJECT_NAME"
 sudo rm -r "wordpress"
@@ -160,8 +186,8 @@ _DB_DEFINES=('DB_NAME' 'DB_USER' 'DB_PASSWORD' 'DB_HOST' 'WPLANG')
 ## region loop for update all the config file DB data row
 for DB_PROPERTY in "${_DB_DEFINES[@]}" ;
 do
-    NEW="define('$DB_PROPERTY', '${!DB_PROPERTY}');"  # Will probably need some pretty crazy escaping to allow for better passwords
-    sed "/$DB_PROPERTY/s/.*/$NEW/" "/var/www/$PROJECT_NAME/wp-config.php" > $TEMP_FILE && mv $TEMP_FILE "/var/www/$PROJECT_NAME/wp-config.php"
+  NEW="define('$DB_PROPERTY', '${!DB_PROPERTY}');"  # Will probably need some pretty crazy escaping to allow for better passwords
+  sed "/$DB_PROPERTY/s/.*/$NEW/" "/var/www/$PROJECT_NAME/wp-config.php" > $TEMP_FILE && mv $TEMP_FILE "/var/www/$PROJECT_NAME/wp-config.php"
 done
 ## endregion
 ## endregion
@@ -174,7 +200,7 @@ IP_MACHINE=$(hostname -I)
 sudo sed -i "1s/^/$IP_MACHINE $PROJECT_NAME\n/" /etc/hosts
 
 sudo touch "/usr/bin/python/$PROJECT_NAME.yaml"
-sudo sed -i "1s/^/hostname:'$PROJECT_NAME'" "/usr/bin/python/$PROJECT_NAME.yaml"
+sudo sed -i "1s/^/hostname: '$PROJECT_NAME'\n/" "/usr/bin/python/$PROJECT_NAME.yaml"
 
 sudo a2ensite "$PROJECT_NAME.conf"
 sudo service apache2 reload
