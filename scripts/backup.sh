@@ -41,7 +41,7 @@ for name in /var/www/*; do
     archive_file="$TMP/$DAY-$domain.tgz"
     echo "$archive_file created, containing $backup_files"
 
-    tar czf "$archive_file" -P $backup_files
+    tar czf "$archive_file" -P "$backup_files"
 done
 ## endregion
 
