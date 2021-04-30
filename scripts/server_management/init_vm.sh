@@ -13,6 +13,7 @@ echo "openssh-server"
 echo "mysql-server mysql-client"
 echo "php7.4 php7.4-mysql libapache2-mod-php7.4"
 echo ""
+read -p "Press enter to start" START
 
 sudo apt -y update
 sudo apt -y install net-tools
@@ -22,13 +23,16 @@ sudo apt-get -y install openssh-server
 sudo apt-get -y install mysql-server mysql-client
 sudo apt-get -y install php7.4 php7.4-mysql libapache2-mod-php7.4
 
-TMP_BACKUP_PATH = "/tmp/backup"
-USR_BIN_PYTHON_PATH ="/usr/bin/python"
-TEMPLATE_PATH = "../../templates/template_vh"
-FIREWALL_PY_PATH = "../firewall/firewall.py"
-FIREWALL_CONFIG_PATH = "../firewall/config.yaml"
-SITES_AVAILABLE = "/etc/apache2/sites-available"
-USR_BIN_DEPLOYEMENT_PATH = "/usr/local/bin"
+TMP_BACKUP_PATH="/tmp/backup"
+USR_BIN_PYTHON_PATH="/usr/bin/python"
+
+TEMPLATE_PATH="../../templates/template_vh"
+FIREWALL_PY_PATH="../firewall/firewall.py"
+FIREWALL_CONFIG_PATH="../firewall/config.yaml"
+SITES_AVAILABLE="/etc/apache2/sites-available"
+USR_BIN_DEPLOYEMENT_PATH="/usr/local/bin"
+
+clear
 
 sudo mkdir "$TMP_BACKUP_PATH"
 sudo mkdir "$USR_BIN_PYTHON_PATH"
@@ -56,8 +60,9 @@ fi
 
 sudo service apache2 restart
 
-clear
 echo "You can find:"
 echo ""
-echo "firewall.py script at $FIREWALL_PY_PATH (and in your git repository)"
-echo "you can now execute the deploy_website.sh script in ../deployement"
+echo "firewall.py script and config.yaml at $FIREWALL_PY_PATH (and in your git repository)"
+echo "Don't forget to edit the config.yaml file after created your website."
+echo ""
+echo "You can now execute the deploy_website.sh script in ../deployement"
