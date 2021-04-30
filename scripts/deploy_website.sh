@@ -70,23 +70,7 @@ else
   ARR_IN=("${PROJECT_NAME//./ }")
 
   USERNAME="${ARR_IN[0]}"
-
-  ## region create user
-  sudo useradd -m -G "www-data" -p "$PASSWORD" "$USERNAME"
-  [ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!"
-  ## endregion
-
-  ## region create database, user, with all privileges on his table
-  REQUEST="
-  CREATE DATABASE $USERNAME CHARACTER SET UTF8 COLLATE UTF8_BIN;
-  CREATE USER '$USERNAME'@'%' IDENTIFIED BY '$PASSWORD';
-  GRANT ALL PRIVILEGES ON $USERNAME.* TO '$USERNAME'@'%';
-  FLUSH PRIVILEGES;
-  "
-  mysql --user=root <<EOFMYSQL
-  $REQUEST
-EOFMYSQL
-  ## endregion
+  sudo bash mysql_create.sh -n "$USERNAME" -p"$PASSWORD"
 
   ## region user website folder
   mkdir "/var/www/$USERNAME"
