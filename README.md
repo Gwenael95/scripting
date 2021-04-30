@@ -58,6 +58,18 @@ De préférences, placer les dans le dossier ```/usr/local/bin``` de votre VM.
 Utiliser le fichier ```init_vm.sh``` afin de faire l'installation complète des librairies
 nécessaire au fonctionnement du serveur web.
 
+## Firewall
+Un repertoire python contient tous les scripts python,
+notamment utilisé pour le firewall.
+Vérifier que les fichiers ```firewall.py``` et ```config.yaml``` sont bien présents dans : 
+```/usr/bin/python/```
+
+## Template
+Un repertoire template contient tous les templates disponibles,
+notamment utilisé pour préparer les virtualHost.
+Vérifier que le fichier ```template``` est bien présent dans : 
+```/etc/apache2/sites-available/```
+
 Le script ```deploy_website.sh``` permet de déployer un nouveau site wordpress.
 On peut saisir les commandes 
 - -n : nom du site, de l'utilisateur et de la database.
@@ -81,12 +93,6 @@ Ajouter le script python ```firewall.py``` dans le dossier ```/usr/bin/python```
 Lancer le script avec la commande ```python3 firewall.py```.
 Ce script permettra de bloquer les ip ayant échoué 5 fois à la connexion 
 sur wordpress en utilisant iptables.
-
-## Template
-Un repertoire template contient tout les templates disponibles,
-notamment utilisé pour préparer les virtualHost.
-Placer le template de virtual host (template_vh) dans 
-```/etc/apache2/sites-available/```
 
 ## Preparation du serveur Web manuel
 
