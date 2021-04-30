@@ -34,14 +34,14 @@ if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ]; then
 fi
 
 ## region create database, user, with all privileges on his table
-REQUEST="
+_REQUEST="
 CREATE DATABASE $USERNAME CHARACTER SET UTF8 COLLATE UTF8_BIN;
 CREATE USER '$USERNAME'@'%' IDENTIFIED BY '$PASSWORD';
 GRANT ALL PRIVILEGES ON $USERNAME.* TO '$USERNAME'@'%';
 FLUSH PRIVILEGES;
 "
 mysql --user=root <<EOFMYSQL
-$REQUEST
+$_REQUEST
 EOFMYSQL
 ## endregion
 
