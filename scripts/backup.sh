@@ -7,7 +7,7 @@
 ########################################################################
 
 ## region FTP server Setup ###
-FTPD="/var/backups"
+FTPD="/var/backups/backupweb"
 FTPU="username"
 FTPP="mot de passe"
 FTPS="192.168.0.00" # A MODIFIER
