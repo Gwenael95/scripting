@@ -100,7 +100,7 @@ else
 fi
 ## endregion
 
-ARR_IN=("${PROJECT_NAME//./ }")
+ARR_IN=("${PROJECT_NAME//./}")
 
 USERNAME="${ARR_IN[0]}"
 
