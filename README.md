@@ -117,7 +117,13 @@ il faut également modifier le fichier ```/etc/hosts``` de notre machine
 
 Pour Mac et Linux, on doit pouvoir suivre les instructions précédentes
 pour le DNS en mettant à jour le fichier ```/etc/hosts``` de notre ordinateur.
-Sur Windows, cela diffère. @todo brian : expliquer la démarche à suivre
+Sur Windows, cela risque de différer. 
+
+Il semble que sur les versions récentes de Windows le fichier 
+soit situé dans ```C:/windows/system32/drivers/etc/hosts```.
+Il faut exécuter un éditeur de texte en tant qu'administrateur (ex : bloc-note),
+sans quoi il sera impossible de faire des modifications.
+
 
 On doit maintenant pouvoir accéder au site depuis un navigateur web via l'url
 ```http://nomDuDomaine``` (ex: http://coding.com).
