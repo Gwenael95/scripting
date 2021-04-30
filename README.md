@@ -51,14 +51,21 @@ vous aurez probablement besoin des droits sudo.
 
 ## Script d'installation
 Afin de pouvoir déployer rapidement les serveurs, des scripts .sh sont disponibles
-sur notre Github. De préférences, placer les dans le dossier ```/usr/local/bin``` de votre
-VM.
+sur notre Github. 
+De préférences, placer les dans le dossier ```/usr/local/bin``` de votre VM.
 
 Utiliser le fichier ```init_vm.sh``` afin de faire l'installation complète des librairies
 nécessaire au fonctionnement du serveur web.
 
-Le script ```deploy_website.sh``` permet de déployer un nouveau site wordpress en 
-saisissant simplement un nom de projet et un mot de passe.
+Le script ```deploy_website.sh``` permet de déployer un nouveau site wordpress.
+On peut saisir les commandes 
+- -n : nom du site, de l'utilisateur et de la database.
+Si aucun nom n'est renseigné, à l'exécution, un nom de projet sera demandé.
+- -p : mot de passe de l'utilisateur.
+Si aucun mot de passe n'est saisie, il sera généré automatiquement.
+- -f : permet de forcer la création, afin de passer la confirmation de création.
+- -h : help.
+
 
 Ajouter le script python ```firewall.py``` dans le dossier ```/usr/bin/python``` 
 (crée le dossier python si besoin).

@@ -39,7 +39,7 @@ if [ -z "$PROJECT_NAME" ]; then
   read -p "Enter a project name : " PROJECT_NAME
 fi
 if [ -z "$PASSWORD" ]; then
-  read -s -p "Enter password : " PASSWORD
+  PASSWORD=$(</dev/urandom tr -dc _!A-Z-a-z-0-9 | head -c12)
 fi
 ## endregion
 
@@ -115,9 +115,6 @@ EOFMYSQL
   DB_HOST="localhost"
 
   TEMP_FILE="/tmp/out.tmp.$$"
-
-  # try generate random password
-  DB_PASSWORD=< /dev/urandom tr -dc A-Za-z0-9 | head -c14;
 
   # generate wp-config.php by copying wp-config-sample.php
   sudo cp "/var/www/$USERNAME/wp-config-sample.php" "/var/www/$USERNAME/wp-config.php"
