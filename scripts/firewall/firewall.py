@@ -23,12 +23,13 @@ def init(auth):
     global poll
 
     is_running = True
-    if not path.exists("/var/www/" + auth):
+    logs_path = "/var/log/apache2/" + auth
+    if not path.exists(logs_path):
         print("\nError!")
-        print(f"/var/www/{auth} not found\n")
+        print(f"{logs_path} not found\n")
         is_running = False
         return 1
-    log_file = subprocess.Popen(["tail", "-F", "/var/www/" + auth + "/logs/access.log"],
+    log_file = subprocess.Popen(["tail", "-F", f"{logs_path}/access.log"],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     poll = select.poll()
 
