@@ -173,6 +173,7 @@ sudo sed -i "s/__PROJECTNAME__/$PROJECT_NAME/g" "/etc/apache2/sites-available/$P
 IP_MACHINE=$(hostname -I)
 sudo sed -i "1s/^/$IP_MACHINE $PROJECT_NAME\n/" /etc/hosts
 
+sudo touch "/usr/bin/python/$PROJECT_NAME.yaml"
 sudo sed -i "1s/^/hostname:'$PROJECT_NAME'" "/usr/bin/python/$PROJECT_NAME.yaml"
 
 sudo a2ensite "$PROJECT_NAME.conf"
