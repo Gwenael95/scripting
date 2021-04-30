@@ -68,33 +68,43 @@ def process():
                 if (date - blocked[ip][0]).total_seconds() <= 300:
                     blocked[ip][0] = date
                     blocked[ip][1] += 1
-                    print(f"\n{ip} try connection: {blocked[ip][1]}\n")
-                    if blocked[ip][1] == 5:
+
+                    print(f"\nConnection failed! {ip} - Attempt: {blocked[ip][1]}\n")
+                    if blocked[ip][1] >= 5:
                         ban_ip(ip)
                 else:
                     blocked[ip] = [date, 1]
-                    print(f"\nIp {ip} reseted to 1.\n")
+                    print(f"\nConnection failed! {ip} - Attempt: {blocked[ip][1]}\n")
+
             else:
                 if (datetime.datetime.now() - date).total_seconds() <= 5:
                     blocked[ip] = [date, 1]
-                    print(f"\nNew ip detected : {ip}\n")
+                    print(f"\nConnection failed! New ip detected : {ip} - Attempt: 1\n")
 
         elif request == "GET" and request_path == "/wp-admin/" and code == 200:
             if ip in blocked:
                 del blocked[ip]
-                print(f"\nIp {ip} removed.\n")
+                print(f"\nConnection successful! Ip {ip} removed.\n")
 
 
 def ban_ip(ip):
     """Ban ip"""
-    subprocess.call(f"iptables -A INPUT -s {ip} -j DROP", shell=True)
-    print(f"{ip} is now banned!")
+    process_result = subprocess.run(f"sudo iptables -A INPUT -s {ip} -j DROP", shell=True)
+    if process_result.returncode != 0:
+        print("A problem occured to ban ip...")
+        print(f"{ip} is not banned!")
+    else:
+        print(f"{ip} is now banned!")
 
 
 def purge_iptables():
     """Purge logs"""
-    subprocess.call(f"iptables -F", shell=True)
-    print("\niptables purged!")
+    process_result = subprocess.run(f"sudo iptables -F", shell=True)
+    if process_result.returncode != 0:
+        print("A problem occured to purge iptables...")
+        print("\niptables wasn't purged!")
+    else:
+        print("\niptables purged!")
 
 
 def main(command_line=None):
