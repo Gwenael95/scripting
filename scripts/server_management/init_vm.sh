@@ -9,7 +9,7 @@ cp_file_in_dir(){
   if [ -f "$1" ] && [ -d "$2" ];
     then
       sudo cp "$1" "$2"
-      display_verbose "copy $1 into $2"
+      display_verbose "copy $1 into --> $2"
     else
       display_verbose "$1 not found! Please move it manually at $2"
   fi
@@ -33,7 +33,7 @@ SCRIPT=$(readlink -f "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
 TMP_BACKUP_PATH="/tmp/backup"
-USR_BIN_PYTHON_PATH="/usr/bin/python"
+USR_BIN_PYTHON_PATH="/usr/local/bin/python"
 
 TEMPLATE_PATH="$SCRIPT_PATH/../../templates/template_vh"
 FIREWALL_PY_PATH="$SCRIPT_PATH/../firewall/firewall.py"

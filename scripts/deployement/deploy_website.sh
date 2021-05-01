@@ -11,8 +11,8 @@
 wget=/usr/bin/wget
 tar=/bin/tar
 
-wordpress_filename="latest-fr_FR.tar.gz"
-wordpress_filepath="/tmp/$wordpress_filename"
+WP_FILE_NAME="latest-fr_FR.tar.gz"
+WP_FILE_PATH="/tmp/$WP_FILE_NAME"
 
 _WORDPRESS="https://fr.wordpress.org/latest-fr_FR.tar.gz"
 _TEMPLATE_VH="template_vh"
@@ -28,7 +28,7 @@ function get_wordpress() {
       exit 1
     fi
   fi
-  $tar xf "$wordpress_filepath" # add v next x to Display progress in the terminal
+  $tar xf "$WP_FILE_PATH" # add v next x to Display progress in the terminal
   cd "$OLDPWD" || return
 }
 
@@ -36,13 +36,14 @@ clear
 
 
 ## region optional args
-while getopts n:p:hf flag
+while getopts n:p:hfu flag
 do
   case "${flag}" in
       n) PROJECT_NAME=${OPTARG};;
       p) PASSWORD=${OPTARG};;
       h) HELP=true;;
       f) FORCE=true;;
+      u) UPDATE_WP=true;;
   esac
 done
 ## endregion
@@ -54,6 +55,7 @@ echo "
  Use -n to give a project name without extension.
  Use -p to set a password.
  Use -f to force creation (don't ask confirmation).
+ Use -u to force download wordpress version (update).
 "
 exit 0
 fi
@@ -127,24 +129,24 @@ sudo useradd -m -G "www-data" -p "$PASSWORD" "$USERNAME"
 sudo bash mysql_create.sh -n "$USERNAME" -p"$PASSWORD"
 
 ## region wget to download VERSION file
-if [ ! -f "$wordpress_filepath" ] ; then
+if [ ! -f "$WP_FILE_PATH" ] ; then
   echo "Download wordpress"
   get_wordpress true
 
 else
   # will check if wordpress is recently downloaded, if not we will remove the old one and download a newer version
-  echo "$wordpress_filename already downloaded!"
+  echo "$WP_FILE_NAME already downloaded!"
   date_now=$(date +%s)
-  date_file=$(date -r "$wordpress_filepath" +%s)
+  date_file=$(date -r "$WP_FILE_PATH" +%s)
   seconds_between=$(("$date_now"-"$date_file"))
   seconds_in_1_week=$((60*60*24*7))
 
-  if [ "$seconds_between" -gt "$seconds_in_1_week" ] ; then
-    sudo rm "$wordpress_filepath"
+  if [ "$seconds_between" -gt "$seconds_in_1_week" ] || [ -n "$UPDATE_WP" ]; then
+    sudo rm "$WP_FILE_PATH"
     echo "Download a newer wordpress version"
     get_wordpress true
   else
-    echo "$wordpress_filename previously downloaded extraction"
+    echo "$WP_FILE_NAME previously downloaded extraction"
     get_wordpress false
   fi
 fi
@@ -197,8 +199,8 @@ IP_MACHINE=$(hostname -I)
 sudo sed -i "1s/^/$IP_MACHINE $PROJECT_NAME\n/" /etc/hosts
 
 # prepare firewall for this project
-sudo touch "/usr/bin/python/$PROJECT_NAME.yaml"
-sudo sed -i "1s/^/hostname: '$PROJECT_NAME'\n/" "/usr/bin/python/$PROJECT_NAME.yaml"
+sudo touch "/usr/local/bin/python/$PROJECT_NAME.yaml"
+sudo sed -i "1s/^/hostname: '$PROJECT_NAME'\n/" "/usr/local/bin/python/$PROJECT_NAME.yaml"
 
 sudo a2ensite "$PROJECT_NAME.conf"
 sudo service apache2 reload
