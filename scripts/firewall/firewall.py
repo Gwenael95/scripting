@@ -40,7 +40,7 @@ def init(auth):
 
 
 def exit_gracefully(arg1, arg2):
-    """Exit"""
+    """Exit and purge iptables, all ban ip are not anymore"""
     global is_running
     is_running = False
     purge_iptables()

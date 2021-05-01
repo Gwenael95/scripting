@@ -7,9 +7,14 @@ web permettant l'hébergement de sites internet et leurs administrations.
 ## Sommaire
 I. [Service d'hébergement de sites clients](#service-dhebergement-de-sites-clients)
 1. [Configuration de la VM](#configuration-de-la-vm)
-2. [Script d'installation](#script-dinstallation)
-    
-3. [Préparation du serveur Web manuel](#preparation-du-serveur-web-manuel)
+2. [Script d'installation](#scripts-dinstallation-disponibles)
+    - [Script d'initialisation](#script-dinitialisation)
+    - [Script de deploiement](#script-de-deploiement)
+    - [Script de creation d'utilisateur mysql](#script-de-creation-dutilisateur-mysql)
+    - [Script du Firewall](#script-du-firewall)
+3. [Template](#template)
+
+4. [Préparation du serveur Web manuel](#preparation-du-serveur-web-manuel)
     - [SSH](#ssh)
     - [Apache](#apache)
     - [DNS](#dns)
@@ -22,7 +27,7 @@ I. [Service d'hébergement de sites clients](#service-dhebergement-de-sites-clie
     - [Cron](#cron)
     - [Backup](#backup)
 
-4. [Preparation du serveur backup manuel](#preparation-du-serveur-backup-manuel)
+5. [Preparation du serveur backup manuel](#preparation-du-serveur-backup-manuel)
     - [Gestion des disques](#gestion-des-disques)
         - [Partitionnement](#partitionnement)
     - [Creation d'un LVM](#creation-dun-lvm)
@@ -38,7 +43,7 @@ I. [Service d'hébergement de sites clients](#service-dhebergement-de-sites-clie
 On suppose que vous travaillez en local sur des VM Linux.
 
 Installer et configurer une VM avec VirtualBox, 
-et une image disk au format .iso d'Ubuntu (version 20).
+et une image disk au format .iso d'Ubuntu (version 20 à ce jour).
 
 Après avoir fait la configuration classique de la VM, 
 n'oubliez pas de configurer le mode d'accès réseau de la VM 
@@ -49,38 +54,57 @@ Pour cela, depuis l'interface VirtualBox, aller dans configuration
 NB : pour la majorité des commandes qui suivront, 
 vous aurez probablement besoin des droits sudo.
 
-## Script d'installation
+## Scripts d'installation disponibles
 Afin de pouvoir déployer rapidement les serveurs, des scripts .sh sont disponibles
 sur notre Github. 
 Ces scripts sont disponibles dans le dossier ```/scripts```.
 De préférences, placer les dans le dossier ```/usr/local/bin``` de votre VM.
 
-Utiliser le fichier ```init_vm.sh``` afin de faire l'installation complète des librairies
-nécessaire au fonctionnement du serveur web.
+- Le script ```deploy_website.sh``` permet de déployer un nouveau site wordpress.
+Ce script utilise le script ```mysql_create.sh```, les laisser dans le même répertoire.
+- Le script ```mysql_create.sh``` permet de créer une base de données et un utilisateur 
+mysql si un nom d'utilisateur et mot de passe et fourni.
+- Le script ```init_vm.sh``` permet d'initialiser le server en faisant les installations nécessaires
+et en gérant l'emplacement des fichiers nécessaires au fonctionnement du serveur.
+- le script python ```firewall.py``` associé au fichier ```config.yaml``` permet de bannir
+une ip après 5 tentatives ratées de connexion.
 
-## Firewall
-Un repertoire python contient tous les scripts python,
-notamment utilisé pour le firewall.
-Vérifier que les fichiers ```firewall.py``` et ```config.yaml``` sont bien présents dans : 
-```/usr/bin/python/```
+### Script d'initialisation
+Utiliser le script ```init_vm.sh```, localiser dans ```scripts/server_management/```,
+afin de faire l'installation complète du serveur. 
+Les librairies nécessaires au fonctionnement du serveur web seront installées, 
+et les fichiers seront placés aux emplacements voulus sur le serveur.
 
-## Template
-Un repertoire template contient tous les templates disponibles,
-notamment utilisé pour préparer les virtualHost.
-Vérifier que le fichier ```template``` est bien présent dans : 
-```/etc/apache2/sites-available/```
+On peut saisir les commandes 
+- -i : permettant d'ignorer les installations (apt install), si on ne veut que
+mettre a jour les fichiers depuis le Git cloné.
+- -v : mode verbeux, permettant d'afficher les dossiers créer sur le serveur et les 
+fichiers copier sur le serveur.
+- -h : affiche les commande disponibles.
 
+### Script de deploiement
 Le script ```deploy_website.sh``` permet de déployer un nouveau site wordpress.
+Un utilisateur sera créé sur le serveur mais aussi sur mysql ainsi qu'une base de données.
+On Téléchargera wordpress pour le site si besoin, si le fichier compressé existe et qu'il est récent 
+(moins d'une semaine) on ne télécharge pas wordpress.
+
 On peut saisir les commandes 
 - -n : nom du site, de l'utilisateur et de la database.
 Si aucun nom n'est renseigné, à l'exécution, un nom de projet sera demandé.
 - -p : mot de passe de l'utilisateur.
 Si aucun mot de passe n'est saisie, il sera généré automatiquement.
 - -f : permet de forcer la création, afin de passer la confirmation de création.
+- -u : permet de forcer le téléchargement de wordpress, même si le fichier compressé
+est présent sur la machine et plutôt récent. 
 - -h : help.
 
-Le script ```mysql_create.sh``` permet de crée un utilisateur mysql ainsi
-qu'une base de données si un nom d'utilisateur et mot de passe et fourni.
+À noter que ce script utilise le script```mysql_create.sh```, il faut donc 
+les laisser dans le même répertoire pour que le déploiement se déroule correctement.
+
+### Script de creation d'utilisateur mysql
+Le script ```mysql_create.sh``` permet de créer un utilisateur mysql ainsi
+qu'une base de données si un nom d'utilisateur et mot de passe est fourni.
+
 On peut saisir les commandes 
 - -n : nom de l'utilisateur et de la database.
 Si aucun nom n'est renseigné, le script s'arrete.
@@ -88,11 +112,31 @@ Si aucun nom n'est renseigné, le script s'arrete.
 Si aucun mot de passe n'est saisie, le script s'arrete.
 - -h : help.
 
-Ajouter le script python ```firewall.py``` dans le dossier ```/usr/bin/python``` 
-(crée le dossier python si besoin).
+### Script du Firewall
+Un repertoire python contient tous les scripts python, notamment utilisé pour le firewall.
+Vérifier que les fichiers ```firewall.py``` et ```config.yaml``` sont bien présents dans : 
+```/usr/local/bin/python/```.
+
 Lancer le script avec la commande ```python3 firewall.py```.
 Ce script permettra de bloquer les ip ayant échoué 5 fois à la connexion 
 sur wordpress en utilisant iptables.
+
+Un fichier de config par défaut est utilisé, le fichier ```config.yaml```.
+Vous pouvez modifier ce fichier en mettant la valeur voulu du hostname.
+
+On peut saisir les commandes 
+- -c (--config) nomDeFichier.yaml : permet de spécifier le fichier de config
+à utiliser pour le script.
+Si non renseigné, on prend le fichier de config par défaut
+
+## Template
+Un repertoire template contient tous les templates disponibles,
+notamment utilisé pour préparer les virtualHost.
+Vérifier que le fichier ```template_vh``` est bien présent dans : 
+```/etc/apache2/sites-available/```
+
+
+**************
 
 ## Preparation du serveur Web manuel
 
