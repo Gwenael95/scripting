@@ -14,6 +14,8 @@ tar=/bin/tar
 
 WP_FILE_NAME="latest-fr_FR.tar.gz"
 WP_FILE_PATH="/tmp/$WP_FILE_NAME"
+_BIN_PYHON_PATH="/usr/local/bin/python"
+_A2_AVAILABLE_PATH="/etc/apache2/sites-available"
 
 _WORDPRESS="https://fr.wordpress.org/latest-fr_FR.tar.gz"
 _TEMPLATE_VH="template_vh"
@@ -221,23 +223,29 @@ done
 ## endregion
 
 ## region enable site
-sudo cp "/etc/apache2/sites-available/$_TEMPLATE_VH" "/etc/apache2/sites-available/$PROJECT_NAME.conf"
-sudo sed -i "s/__PROJECTNAME__/$PROJECT_NAME/g" "/etc/apache2/sites-available/$PROJECT_NAME.conf"
+sudo cp "$_A2_AVAILABLE_PATH/$_TEMPLATE_VH" "$_A2_AVAILABLE_PATH/$PROJECT_NAME.conf"
+sudo sed -i "s/__PROJECTNAME__/$PROJECT_NAME/g" "$_A2_AVAILABLE_PATH/$PROJECT_NAME.conf"
 
 # prepare DNS on server side
 IP_MACHINE=$(hostname -I)
 sudo sed -i "1s/^/$IP_MACHINE $PROJECT_NAME\n/" /etc/hosts
 
 # prepare firewall for this project
-sudo touch "/usr/local/bin/python/$PROJECT_NAME.yaml"
-sudo sed -i "1s/^/hostname: '$PROJECT_NAME'\n/" "/usr/local/bin/python/$PROJECT_NAME.yaml"
+sudo touch "$_BIN_PYHON_PATH/$PROJECT_NAME.yaml"
+printf "hostname: '$PROJECT_NAME'\n" >> "$_BIN_PYHON_PATH/$PROJECT_NAME.yaml"
 
 sudo a2ensite "$PROJECT_NAME.conf"
 sudo service apache2 reload
+
+python3 "$_BIN_PYHON_PATH/firewall.py" -c "$_BIN_PYHON_PATH/$PROJECT_NAME.yaml" & # launch in background
 ## endregion
 
 echo "Done, please browse to http://$PROJECT_NAME to check!"
 echo "if you're running from VM, don't forget to update your machine /etc/host
 with this server ip (can use ifconfig to find it)."
 get_ip
+
+echo "run firewall in background => python3 $_BIN_PYHON_PATH/firewall.py -c $_BIN_PYHON_PATH/$PROJECT_NAME.yaml"
+echo "Here PID of the current firewall process, if you want to use kill command"
+ps aux | grep -i "python3 $_BIN_PYHON_PATH/firewall.py -c $_BIN_PYHON_PATH/$PROJECT_NAME.yaml" | awk {'print $2'}
 
