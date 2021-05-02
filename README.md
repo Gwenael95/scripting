@@ -60,12 +60,12 @@ sur notre Github.
 Ces scripts sont disponibles dans le dossier ```/scripts```.
 De préférences, placer les dans le dossier ```/usr/local/bin``` de votre VM.
 
+- Le script ```init_vm.sh``` permet d'initialiser le server en faisant les installations nécessaires
+et en gérant l'emplacement des fichiers nécessaires au fonctionnement du serveur.
 - Le script ```deploy_website.sh``` permet de déployer un nouveau site wordpress.
 Ce script utilise le script ```mysql_create.sh```, les laisser dans le même répertoire.
 - Le script ```mysql_create.sh``` permet de créer une base de données et un utilisateur 
 mysql si un nom d'utilisateur et mot de passe et fourni.
-- Le script ```init_vm.sh``` permet d'initialiser le server en faisant les installations nécessaires
-et en gérant l'emplacement des fichiers nécessaires au fonctionnement du serveur.
 - le script python ```firewall.py``` associé au fichier ```config.yaml``` permet de bannir
 une ip après 5 tentatives ratées de connexion.
 
@@ -74,6 +74,9 @@ Utiliser le script ```init_vm.sh```, localiser dans ```scripts/server_management
 afin de faire l'installation complète du serveur. 
 Les librairies nécessaires au fonctionnement du serveur web seront installées, 
 et les fichiers seront placés aux emplacements voulus sur le serveur.
+Cela préparera aussi la tâche cron afin de sauver la base de données en backup
+tous les jours pendant la nuit.
+**Il est donc conseillé de lancer ce script après avoir cloné le repo Git.**
 
 On peut saisir les commandes 
 - -i : permettant d'ignorer les installations (apt install), si on ne veut que
