@@ -142,6 +142,8 @@ Vérifier que le fichier ```template_vh``` est bien présent dans :
 **************
 
 ## Preparation du serveur Web manuel
+Nous allons maintenant voir comment préparer les serveurs de manière manuel (sans le script d'initialisation).
+Cette partie n'est donc pas nécessaire si vous avez suivi la partie [Script d'installation](#scripts-dinstallation-disponibles).
 
 ### SSH
 Sur votre serveur web, utiliser la commande ```sudo apt install net-tools```, 
@@ -428,7 +430,7 @@ Les fichiers dans le dossier ```/var/backups``` devrait toujours être présent.
 Afin de pouvoir envoyer les fichiers backup sur le serveur prévu
 à cet effet, on peut utiliser le SSH pour les transmettre.
 Vous pouvez vous référer à la même section pour le 
-[serveur web](#SSH) afin de préparer le serveur
+[ssh du serveur web](#ssh) afin de préparer le serveur
 
 ### Reception des backups
 Afin de pouvoir recevoir des backups sur ce serveur depuis le serveur web,
