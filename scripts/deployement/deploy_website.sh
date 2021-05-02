@@ -8,6 +8,7 @@
 # Require mysql_create.sh in same directory.                            #
 #########################################################################
 
+## region consts
 wget=/usr/bin/wget
 tar=/bin/tar
 
@@ -16,7 +17,9 @@ WP_FILE_PATH="/tmp/$WP_FILE_NAME"
 
 _WORDPRESS="https://fr.wordpress.org/latest-fr_FR.tar.gz"
 _TEMPLATE_VH="template_vh"
+## endregion
 
+## region helper functions
 function get_wordpress() {
   cd "/tmp" || return
 
@@ -31,9 +34,24 @@ function get_wordpress() {
   $tar xf "$WP_FILE_PATH" # add v next x to Display progress in the terminal
   cd "$OLDPWD" || return
 }
+function check_project_exist(){
+  egrep "^$1" /etc/passwd >/dev/null
+  exist=$?
 
-clear
-
+  if [ $exist -eq 0 ]; then
+    echo "Project $1 already exists!"
+    exit 1
+  fi
+}
+function get_ip(){
+  VM_IP="$(ifconfig | grep "inet* 192" | sed "s/ /_/g" | cut -d _ -f 10)"
+  if [ -n "$VM_IP" ]; then
+      echo "VM ip : $VM_IP"
+    else
+      ifconfig | grep "inet*"
+  fi
+}
+## endregion
 
 ## region optional args
 while getopts n:p:hfu flag
@@ -50,32 +68,43 @@ done
 
 ## region help
 if [ -n "$HELP" ]; then
-echo "
- Use -h to ask help.
- Use -n to give a project name without extension.
- Use -p to set a password.
- Use -f to force creation (don't ask confirmation).
- Use -u to force download wordpress version (update).
-"
-exit 0
+  echo "
+   Use -h to ask help.
+   Use -n to give a project name without extension.
+   Use -p to set a password.
+   Use -f to force creation (don't ask confirmation).
+   Use -u to force download wordpress version (update).
+  "
+  exit 0
 fi
 ## endregion
 
-echo "¤ Deploy website ¤"
-echo ""
-echo "Be sure to be in 'sudo su' before starting..."
-echo "Else, press Ctrl+C and do it!"
-echo ""
 
+clear
 
-# get project name and password, in order to create user if not in options
+## region introduce script
+echo "¤ Deploy website ¤
+
+This script will deploy a website.
+It will create user on server, mysql user and database, prepare wordpress,
+create virtualHost and enable site.
+
+Be sure to be in 'sudo su' before starting...
+Else, press Ctrl+C and do it!
+"
+## endregion
+
+## region get project name and password, in order to create user if not in options
+## region project name section
 if [ -z "$PROJECT_NAME" ]; then
   read -p "Enter a project name (without extension) : " PROJECT_NAME
 fi
-if [ -z "$PASSWORD" ]; then
-  PASSWORD=$(</dev/urandom tr -dc _!A-Z-a-z-0-9 | head -c12)
-fi
 
+# check any project has same name, no need to extension because for 2 site with same username but different extension
+# there will be no difference in mysql DB that could lead to issues
+check_project_exist "$PROJECT_NAME"
+
+## region choose extension
 echo "Choose your extension:"
 echo ""
 select extension in "net" "com" "local" "org"
@@ -87,7 +116,17 @@ select extension in "net" "com" "local" "org"
 done
 
 PROJECT_NAME="$PROJECT_NAME.$extension"
+## endregion
 
+## endregion
+
+if [ -z "$PASSWORD" ]; then
+  PASSWORD=$(</dev/urandom tr -dc _!A-Z-a-z-0-9 | head -c12)
+fi
+## endregion
+
+
+## region confirm project creation
 echo "
 Create project: $PROJECT_NAME, with password= $PASSWORD"
 if [ -z "$FORCE" ]; then
@@ -104,29 +143,20 @@ if [ -z "$FORCE" ]; then
   fi
   done
 fi
-
-
-# check any project has same name
-egrep "^$PROJECT_NAME" /etc/passwd >/dev/null
-exist=$?
-
-if [ $exist -eq 0 ]; then
-echo "Project $PROJECT_NAME already exists!"
-exit 1
-fi
 ## endregion
 
 
-ARR_IN=("${PROJECT_NAME//./}")
 
+## region create users and db
+ARR_IN=("${PROJECT_NAME//./}")
 USERNAME="${ARR_IN[0]}"
 
-## region create user
-sudo useradd -m -G "www-data" -p "$PASSWORD" "$USERNAME"
-[ $? -eq 0 ] && echo "User has been added to system!" || echo "Failed to add a user!"
-## endregion
+## create user on server
+sudo useradd -m -G "www-data" -p "$PASSWORD" "$USERNAME" && echo "User has been added to system!" || (echo "Failed to add a user!" && exit 1)
 
+# create user and database on mysql
 sudo bash mysql_create.sh -n "$USERNAME" -p"$PASSWORD"
+## endregion
 
 ## region wget to download VERSION file
 if [ ! -f "$WP_FILE_PATH" ] ; then
@@ -207,3 +237,7 @@ sudo service apache2 reload
 ## endregion
 
 echo "Done, please browse to http://$PROJECT_NAME to check!"
+echo "if you're running from VM, don't forget to update your machine /etc/host
+with this server ip (can use ifconfig to find it)."
+get_ip
+
