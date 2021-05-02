@@ -4,11 +4,15 @@
 # This script is used to initialiaze a VM                              #
 ########################################################################
 
-## $1 is file to copy, $2 destination file
+## $1 is file to copy, $2 destination file, $3 is mod to apply to file if need to be changed
 cp_file_in_dir(){
   if [ -f "$1" ] && [ -d "$2" ];
     then
-      sudo cp "$1" "$2"
+      filename="$(basename "$1")"
+      sudo cp "$1" "$2/$filename"
+      if [ -n "$3" ]; then
+          chmod "$3" "$2/$filename"
+      fi
       display_verbose "copy $1 into --> $2"
     else
       display_verbose "$1 not found! Please move it manually at $2"
@@ -42,6 +46,7 @@ SITES_AVAILABLE="/etc/apache2/sites-available"
 USR_BIN_DEPLOYEMENT_PATH="/usr/local/bin"
 DEPLOY_PATH="$SCRIPT_PATH/../deployement/deploy_website.sh"
 MYSQL_CREATE_PATH="$SCRIPT_PATH/../deployement/mysql_create.sh"
+BACKUP_PATH="$SCRIPT_PATH/../backup.sh"
 ## endregion
 
 
@@ -73,7 +78,8 @@ clear
 COMMON_INTRO="
 
 This script will prepare the server.
-It will place all files required into the server"
+It will place all files required into the server.
+It will also prepare cron job for backup.sh on your system."
 
 
 if [ -z "$IGNORE_APT" ]; then
@@ -97,6 +103,7 @@ if [ -z "$IGNORE_APT" ]; then
   sudo apt-get -y install openssh-server
   sudo apt-get -y install mysql-server mysql-client
   sudo apt-get -y install php php-mysql libapache2-mod-php
+  sudo apt-get install vsftpd
 
 else
   echo "$COMMON_INTRO"
@@ -105,18 +112,31 @@ fi
 
 clear
 
+
 make_dir "$TMP_BACKUP_PATH"
 make_dir "$USR_BIN_PYTHON_PATH"
 
 cp_file_in_dir "$FIREWALL_PY_PATH" "$USR_BIN_PYTHON_PATH"
 cp_file_in_dir "$FIREWALL_CONFIG_PATH" "$USR_BIN_PYTHON_PATH"
-cp_file_in_dir "$TEMPLATE_PATH" "$SITES_AVAILABLE"
 
-cp_file_in_dir "$DEPLOY_PATH" "$USR_BIN_DEPLOYEMENT_PATH"
-cp_file_in_dir "$MYSQL_CREATE_PATH" "$USR_BIN_DEPLOYEMENT_PATH"
+cp_file_in_dir "$TEMPLATE_PATH" "$SITES_AVAILABLE"
+cp_file_in_dir "$DEPLOY_PATH" "$USR_BIN_DEPLOYEMENT_PATH" "755"
+cp_file_in_dir "$MYSQL_CREATE_PATH" "$USR_BIN_DEPLOYEMENT_PATH" "755"
+cp_file_in_dir "$BACKUP_PATH" "$USR_BIN_DEPLOYEMENT_PATH" "755" # important for cronjob
+
+## region prepare cron tab job
+_BACKUP_JOB_KEY="#cronjob backup"
+CRON_JOB="0 1 * * * $USR_BIN_DEPLOYEMENT_PATH/$(basename "$BACKUP_PATH") $_BACKUP_JOB_KEY"
+
+(crontab -l 2>/dev/null | grep -v "$_BACKUP_JOB_KEY"; echo "$CRON_JOB") | crontab -
+update-rc.d cron defaults
+service cron restart
+## endregion
+
 
 echo ""
 sudo service apache2 restart
+sudo service vsftpd start
 
 echo "You can find:
 
